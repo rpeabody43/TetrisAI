@@ -13,7 +13,26 @@ int main(int argc, char* argv[])
 	if (SDL_Init(SDL_INIT_VIDEO) > 0) 
 		cout << "SDL FAILED TO INITIALIZE: " << SDL_GetError() << endl;
 
-	int stepRate = b.ticks_per_step();
+	SDL_Window* window = SDL_CreateWindow(
+		"TetrisAI",
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		512,
+		512,
+		0
+	);
+
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+	SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
+	SDL_RenderPresent(renderer);
+
+	SDL_Delay(3000);
+
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+
+	/*int stepRate = b.ticks_per_step();
 	for (int i = 0; i < 1000; i++)
 	{
 		b.tick();
@@ -31,10 +50,6 @@ int main(int argc, char* argv[])
 			output.append("\n");
 		}
 		cout << output << endl;
-	}
-
-	
-
-	SDL_Quit();
+	}*/
 	return 0;
 }
