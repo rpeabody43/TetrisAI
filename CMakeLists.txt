@@ -10,7 +10,9 @@ find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
 # Add source to this project's executable.
-add_executable (TetrisAI "src/main.cpp"  "include/Board.hpp")
+set(SOURCES src/main.cpp src/Board.cpp src/Tetrominoes.cpp)
+add_executable(TetrisAI ${SOURCES})
+target_include_directories(TetrisAI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/headers)
 
 target_link_libraries(TetrisAI SDL2::SDL2 SDL2::SDL2main)
 
