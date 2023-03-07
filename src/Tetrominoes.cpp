@@ -4,7 +4,8 @@ namespace Tetrominoes
 {
 	int maps[7][4][4]
 	{
-		{ // L Piece
+		{ // I Piece
+			// TODO : I rotates differently than other pieces, add special cases for it
 			{0, -2, -1, 1}, {0, -10, 10, -20}, {0, -2, -1, 1}, {0, -10, 10, -20}
 		},
 		{ // J Piece
