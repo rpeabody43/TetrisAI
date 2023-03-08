@@ -5,33 +5,28 @@
 class Board
 {
 private:
-	bool mGameover;
+	bool m_Gameover;
 
-	int mTicks;
-	int mTicksPerStep;
+	int m_Ticks;
+	int m_fallRate;
 
-	int mBoard[180] = { 0 };
-	int mFallingPiece;
-	int mFallingPieceRot;
-	int mFallingPieceIdx;
-	int* pFallingPieceMap;
+	int m_Board[180] = { 0 };
+	int m_FallingPiece;
+	int m_FallingPieceRot;
+	int m_FallingPieceIdx;
+	int* m_pFallingPieceMap;
 
 public:
-
 	static const int WIDTH = 10;
 	static const int HEIGHT = 18;
 
+	Board(int fallRate);
 
-	Board(int ticksPerStep);
-
-	void new_piece();
-	void tick();
-	int idx_convert(int x, int y);
-	int get_square(int x, int y);
+	void NewPiece();
+	void MoveDown();
+	void Update(Uint32 ticks);
+	int IdxConvert(int x, int y);
+	int GetSquare(int x, int y);
 	
-	int ticks_per_step();
-	int total_ticks();
-
-
-
+	int TicksPerStep();
 };

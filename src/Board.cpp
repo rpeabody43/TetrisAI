@@ -1,45 +1,45 @@
+#include "headers\Board.hpp"
 #include <random>
 
 #include "headers/Tetrominoes.hpp"
 #include "headers/Board.hpp"
 
-Board::Board(int ticksPerStep)
+Board::Board(int fallRate)
+	: m_Gameover(false)
+	, m_Ticks(0)
+	, m_FallingPiece(0)
+	, m_FallingPieceRot(0)
+	, m_FallingPieceIdx(5)
+	, m_pFallingPieceMap(nullptr)
 {
-	mGameover = false;
-
-	mTicks = 0;
-	mTicksPerStep = ticksPerStep;
-	mFallingPiece = 0;
-	mFallingPieceRot = 0;
-	mFallingPieceIdx = 5;
-	pFallingPieceMap = NULL;
+	m_fallRate = fallRate;
 }
 
-void Board::new_piece() 
+void Board::NewPiece()
 {
 	std::random_device rd;
 	std::mt19937 eng(rd());
 	std::uniform_int_distribution<> distr(0, 7); // TODO : Proper random
 
 	// mFallingPiece = distr(eng) + 1;
-	mFallingPiece = 1;
-	mFallingPieceIdx = 5;
-	mFallingPieceRot = 0;
-	pFallingPieceMap = Tetrominoes::maps[mFallingPiece-1][mFallingPieceRot];
+	m_FallingPiece = 1;
+	m_FallingPieceIdx = 5;
+	m_FallingPieceRot = 0;
+	m_pFallingPieceMap = Tetrominoes::maps[m_FallingPiece-1][m_FallingPieceRot];
 
 	int start = 5;
 	for (int i = 3; i >= 0; i--)
 	{
-		int newIdx = start + *(pFallingPieceMap + i);
-		if (mBoard[newIdx] == 0)
+		int newIdx = start + *(m_pFallingPieceMap + i);
+		if (m_Board[newIdx] == 0)
 		{
-			mBoard[newIdx] = mFallingPiece;
+			m_Board[newIdx] = m_FallingPiece;
 		}
-		else mGameover = true;
+		else m_Gameover = true;
 	}
 }
 
-void Board::tick()
+void Board::Update(Uint32 ticks)
 {
 	mTicks++;
 	if (mTicks % mTicksPerStep != 0) return;
@@ -74,22 +74,22 @@ void Board::tick()
 	mFallingPieceIdx += 10;
 }
 
-int Board::idx_convert(int x, int y)
+int Board::IdxConvert(int x, int y)
 {
 	return y * WIDTH + x;
 }
 
-int Board::get_square(int x, int y)
+int Board::GetSquare(int x, int y)
 {
-	return mBoard[idx_convert(x, y)];
+	return m_Board[IdxConvert(x, y)];
 }
 
-int Board::ticks_per_step()
+int Board::TicksPerStep()
 {
-	return mTicksPerStep;
+	return m_fallRate;
 }
 
 int Board::total_ticks()
 {
-	return mTicks;
+	return m_Ticks;
 }
