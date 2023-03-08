@@ -11,6 +11,7 @@ Board::Board(int fallRate)
 	, m_FallingPieceRot(0)
 	, m_FallingPieceIdx(5)
 	, m_pFallingPieceMap(nullptr)
+	, m_Board(0)
 {
 	m_fallRate = fallRate;
 }
@@ -39,39 +40,44 @@ void Board::NewPiece()
 	}
 }
 
-void Board::Update(Uint32 ticks)
+void Board::MoveDown()
 {
-	mTicks++;
-	if (mTicks % mTicksPerStep != 0) return;
 
-	if (mFallingPiece == 0)
+	if (m_FallingPiece == 0)
 	{
-		new_piece();
+		NewPiece();
 		return;
 	}
 
 	bool positionValid = true;
 	for (int i = 0; i < 4 && positionValid; i++)
 	{
-		int newPos = mFallingPieceIdx + *(pFallingPieceMap + i) + 10;
-		if (newPos > HEIGHT*WIDTH || mBoard[newPos] != 0)
+		int newPos = m_FallingPieceIdx + *(m_pFallingPieceMap + i) + 10;
+		if (newPos > HEIGHT * WIDTH || m_Board[newPos] != 0)
 			positionValid = false;
 	}
 
 	if (!positionValid)
 	{
-		new_piece();
+		NewPiece();
 		return;
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
 		// Get the block with the delta from the map array
-		int idx = mFallingPieceIdx + *(pFallingPieceMap + i);
-		mBoard[idx] = 0;
-		mBoard[idx + 10] = mFallingPiece;
+		int idx = m_FallingPieceIdx + *(m_pFallingPieceMap + i);
+		m_Board[idx] = 0;
+		m_Board[idx + 10] = m_FallingPiece;
 	}
-	mFallingPieceIdx += 10;
+	m_FallingPieceIdx += 10;
+}
+
+void Board::Update(Uint32 ticks)
+{
+	m_Ticks = ticks;
+	//if (mTicks % mTicksPerStep != 0) return;
+
 }
 
 int Board::IdxConvert(int x, int y)
