@@ -10,5 +10,5 @@ namespace Tetrominoes
 	const int z = 6;
 	const int t = 7;
 
-	extern int maps[7][4][4];
+	extern const int maps[7][4][4];
 }

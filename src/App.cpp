@@ -24,7 +24,7 @@ void App::NewGame()
 {
 	delete m_pBoard;
 	m_pBoard = nullptr;
-	m_pBoard = new Board(750);
+	m_pBoard = new Board(250);
 }
 
 bool App::Init()
@@ -131,6 +131,21 @@ void App::Draw()
 			SDL_RenderFillRect(m_pRenderer, &sqRect);
 		}
 	}
+
+	int anchor = m_pBoard->FallingPieceAnchor();
+	int x = (anchor % 10)*squareSize + boardOffsetX;
+	int y = (anchor / 10)*squareSize + boardOffsetY;
+
+	SDL_Rect anchorSq =
+	{
+		x,
+		y,
+		squareSize,
+		squareSize
+	};
+
+	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
+	SDL_RenderFillRect(m_pRenderer, &anchorSq);
 
 	SDL_RenderPresent(m_pRenderer);
 }

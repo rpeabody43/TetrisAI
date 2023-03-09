@@ -18,7 +18,16 @@ public:
 	
 	int TicksPerStep();
 
+	bool RotRight();
+	bool RotLeft();
+
+	int FallingPieceAnchor();
+
 private:
+	void UpdateFallingPiece(int rotDelta, int moveDelta);
+	int GetPieceMap(int idx);
+	bool Rot(bool dir);
+
 	bool m_gameover;
 
 	unsigned int m_ticks;
@@ -29,5 +38,4 @@ private:
 	int m_fallingPiece;
 	int m_fallingPieceRot;
 	int m_fallingPieceIdx;
-	int* m_pFallingPieceMap;
 };
