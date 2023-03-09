@@ -16,6 +16,7 @@ public:
 	void NewGame();
 
 private:
+	bool UnixScaling();
 	void Draw();
 
 	unsigned int m_screenW;

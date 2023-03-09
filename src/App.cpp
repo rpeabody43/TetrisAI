@@ -2,6 +2,13 @@
 
 #include <SDL.h>
 
+#if defined(_WIN32) || defined(WIN32)
+
+#include <Windows.h>
+#define OS_WINDOWS
+
+#endif
+
 #include "headers/App.hpp"
 
 App::App(unsigned int screenW, unsigned int screenH)
@@ -28,18 +35,51 @@ bool App::Init()
 		return false;
 	}
 
+	// Fix for non-native scaling/DPI (150% in Windows, etc.)
+#ifdef OS_WINDOWS
+	SetProcessDPIAware();
+#endif
+
 	m_pWindow = SDL_CreateWindow(
 		"TetrisAI",
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
 		m_screenW,
 		m_screenH,
-		0
+		SDL_WINDOW_ALLOW_HIGHDPI
 	);
 
 	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_SOFTWARE);
+	
+#ifdef __unix__
+	if (!UnixScaling())
+		return false;
+#endif
 
 	NewGame();
+	return true;
+}
+
+bool App::UnixScaling()
+{
+	int rw = 0, rh = 0;
+	SDL_GetRendererOutputSize(m_pRenderer, &rw, &rh);
+
+	std::cout << "rw: " << rw << ", rh: " << rh << std::endl;
+
+	if (rw != m_screenW)
+	{
+		float wScale = (float)rw / (float)m_screenW;
+		float hScale = (float)rh / (float)m_screenH;
+
+		if (wScale != hScale)
+		{
+			std::cout << "SCALING ERROR: Width scale != Height scale" << std::endl;
+			return false;
+		}
+
+		SDL_RenderSetScale(m_pRenderer, wScale, hScale);
+	}
 	return true;
 }
 
