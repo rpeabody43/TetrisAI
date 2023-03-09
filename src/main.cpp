@@ -1,56 +1,24 @@
-﻿#include <SDL.h>
-#include <iostream>
-#include <string>
+﻿#include <iostream>
 
-#include "headers/Board.hpp";
-
-using namespace std;
-
+#include "headers/App.hpp"
 
 int main(int argc, char* argv[])
 {
-	Board b (45);
+	unsigned int windowW = 1280;
+	unsigned int windowH = 960;
 
-	if (SDL_Init(SDL_INIT_VIDEO) > 0) 
-		cout << "SDL FAILED TO INITIALIZE: " << SDL_GetError() << endl;
+	App app (windowW, windowH);
 
-	SDL_Window* window = SDL_CreateWindow(
-		"TetrisAI",
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
-		512,
-		512,
-		0
-	);
-
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-	SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(renderer);
-	SDL_RenderPresent(renderer);
-
-	SDL_Delay(3000);
-
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-
-	/*int stepRate = b.ticks_per_step();
-	for (int i = 0; i < 1000; i++)
+	if (!app.Init())
 	{
-		b.tick();
-		if (b.total_ticks() % stepRate != 0)
-			continue;
+		std::cout << "ERR: Could not initialize" << std::endl;
+		app.ShutDown();
+		return 1;
+	}
 
-		string output = "";
-		for (int y = 0; y < 18; y++)
-		{
-			for (int x = 0; x < 10; x++)
-			{
-				string square = (b.get_square(x, y) > 0) ? "[O]" : "[ ]";
-				output.append(square);
-			}
-			output.append("\n");
-		}
-		cout << output << endl;
-	}*/
+	app.Run();
+
+	app.ShutDown();
+
 	return 0;
 }
