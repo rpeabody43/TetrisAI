@@ -2,6 +2,16 @@
 
 #include "Tetrominoes.hpp"
 
+struct Input {
+	bool moveLeft;
+	bool moveRight;
+	bool rotClockwise;
+	bool rotCountClockwise;
+	bool softDrop;
+	bool hardDrop;
+	bool holdPiece;
+};
+
 class Board
 {
 public:
@@ -12,7 +22,7 @@ public:
 
 	void NewPiece();
 	void MoveDown();
-	void Update(unsigned int ticks);
+	void Update(Input& inputs, unsigned int ticks);
 	int IdxConvert(int x, int y);
 	int GetSquare(int x, int y);
 	

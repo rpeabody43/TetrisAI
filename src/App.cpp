@@ -10,6 +10,7 @@
 #endif
 
 #include "headers/App.hpp"
+#include "headers/Board.hpp"
 
 App::App(unsigned int screenW, unsigned int screenH)
 	: m_pBoard(nullptr)
@@ -85,7 +86,7 @@ bool App::UnixScaling()
 
 void App::Draw()
 {
-	static unsigned int squareSize = 50;
+	static int squareSize = 50;
 
 	static int boardW = m_pBoard->WIDTH * squareSize;
 	static int boardH = m_pBoard->HEIGHT * squareSize;
@@ -132,7 +133,7 @@ void App::Draw()
 		}
 	}
 
-	int anchor = m_pBoard->FallingPieceAnchor();
+	/*int anchor = m_pBoard->FallingPieceAnchor();
 	int x = (anchor % 10)*squareSize + boardOffsetX;
 	int y = (anchor / 10)*squareSize + boardOffsetY;
 
@@ -145,7 +146,7 @@ void App::Draw()
 	};
 
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
-	SDL_RenderFillRect(m_pRenderer, &anchorSq);
+	SDL_RenderFillRect(m_pRenderer, &anchorSq);*/
 
 	SDL_RenderPresent(m_pRenderer);
 }
@@ -155,6 +156,8 @@ void App::Run()
 	bool end = false;
 	while (!end)
 	{
+		Input input = {};
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -162,10 +165,29 @@ void App::Run()
 			{
 				end = true;
 			}
+
+			if (event.type == SDL_KEYDOWN)
+			{
+				// Copying Tetris.com controls
+				if (event.key.keysym.sym == SDLK_DOWN)
+					input.softDrop = true;
+				if (event.key.keysym.sym == SDLK_LEFT)
+					input.moveLeft = true;
+				if (event.key.keysym.sym == SDLK_RIGHT)
+					input.moveRight = true;
+				if (event.key.keysym.sym == SDLK_UP)
+					input.rotClockwise = true;
+				if (event.key.keysym.sym == SDLK_z)
+					input.rotCountClockwise = true;
+				if (event.key.keysym.sym == SDLK_c)
+					input.holdPiece = true;
+				if (event.key.keysym.sym == SDLK_SPACE)
+					input.hardDrop = true;
+			}
 		}
 
 		Uint32 currentTimeMs = SDL_GetTicks();
-		m_pBoard->Update((int)currentTimeMs);
+		m_pBoard->Update(input, (int)currentTimeMs);
 
 		Draw();
 	}

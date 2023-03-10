@@ -53,6 +53,7 @@ void Board::NewPiece()
 
 void Board::MoveDown()
 {
+	m_lastTicks = m_ticks;
 	if (m_fallingPiece == 0)
 	{
 		NewPiece();
@@ -71,16 +72,7 @@ void Board::MoveDown()
 		return;
 	}
 
-	bool positionValid = ValidMove(1, 10);
-	bool rotated = false;
-	if (!positionValid)
-	{
-		UpdateFallingPiece(1, 0);
-		rotated = true;
-		positionValid = ValidMove(0, 10);
-	}
-
-	UpdateFallingPiece((rotated) ? 0: 1, 10);
+	UpdateFallingPiece(0, 10);
 }
 
 bool Board::ValidMove(int rotDelta, int moveDelta)
@@ -170,15 +162,30 @@ int Board::FallingPieceAnchor()
 	return m_fallingPieceIdx;
 }
 
-void Board::Update(unsigned int ticks)
+void Board::Update(Input& input, unsigned int ticks)
 {
 	if (m_gameover) return;
 	m_ticks = ticks;
 	if (m_ticks - m_lastTicks >= m_fallRate)
 	{
-		m_lastTicks = m_ticks;
 		MoveDown();
 	}
+
+	int moveDelta = 0;
+	int rotDelta = 0;
+
+	if (input.moveLeft)
+		moveDelta -= 1;
+	if (input.moveRight)
+		moveDelta += 1;
+	if (input.softDrop)
+		MoveDown();
+	if (input.rotClockwise)
+		rotDelta += 1;
+	if (input.rotCountClockwise)
+		rotDelta -= 1;
+
+	UpdateFallingPiece(rotDelta, moveDelta);
 
 }
 
