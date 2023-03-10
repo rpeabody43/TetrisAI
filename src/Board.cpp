@@ -35,7 +35,6 @@ void Board::NewPiece()
 	std::uniform_int_distribution<> distr(0, 6); // TODO : Proper random
 
 	m_fallingPiece = distr(eng) + 1;
-	std::cout << m_fallingPiece << std::endl;
 	//m_fallingPiece = 1;
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
