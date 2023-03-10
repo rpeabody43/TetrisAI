@@ -17,9 +17,15 @@ Board::Board(int fallRate)
 	m_fallRate = fallRate;
 }
 
-int Board::GetPieceMap(int idx)
+int Board::GetPieceMap(int rot, int idx)
 {
-	return Tetrominoes::maps[m_fallingPiece - 1][m_fallingPieceRot][idx];
+	while (rot < 0)
+		rot += 4;
+	while (rot > 3)
+		rot -= 4;
+
+	int ret = TetrominoData::maps[m_fallingPiece - 1][rot][idx];
+	return ret;
 }
 
 void Board::NewPiece()
@@ -29,14 +35,14 @@ void Board::NewPiece()
 	std::uniform_int_distribution<> distr(0, 7); // TODO : Proper random
 
 	//m_fallingPiece = distr(eng) + 1;
-	m_fallingPiece = 5;
-	m_fallingPieceIdx = 23; // Point the piece starts drawing from
+	m_fallingPiece = 1;
+	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
 
 	int start = m_fallingPieceIdx;
 	for (int i = 3; i >= 0; i--)
 	{
-		int newIdx = start + GetPieceMap(i);
+		int newIdx = start + GetPieceMap(m_fallingPieceRot, i);
 		if (m_board[newIdx] == 0)
 		{
 			m_board[newIdx] = -m_fallingPiece;
@@ -53,53 +59,100 @@ void Board::MoveDown()
 		return;
 	}
 
-	RotRight();
-
-	std::cout << m_fallingPieceRot << std::endl;
-
-	bool positionValid = true;
-	for (int i = 0; i < 4 && positionValid; i++)
-	{
-		int newPos = m_fallingPieceIdx + GetPieceMap(i) + 10;
-		if (newPos > HEIGHT * WIDTH || (m_board[newPos] != 0 && m_board[newPos] != -m_fallingPiece))
-			positionValid = false;
-	}
+	bool positionValid = ValidMove(0, 10);
 
 	// stop piece moving
 	if (!positionValid)
 	{
 		for (int i = 3; i >= 0; i--)
 		{
-			int idx = m_fallingPieceIdx + GetPieceMap(i);
+			int idx = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
 			m_board[idx] = m_fallingPiece;
 		}
 		NewPiece();
 		return;
 	}
-
-	// Move each block forward 10 units, or down one row
-	UpdateFallingPiece(0, 10);
+	UpdateFallingPiece(1, 10);
 }
 
-void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
+bool Board::ValidMove(int rotDelta, int moveDelta)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		int oldPos = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
+		int newPos = m_fallingPieceIdx + moveDelta + GetPieceMap(m_fallingPieceRot+rotDelta, i);
+		// If it's an index error on either side
+		if (newPos > HEIGHT * WIDTH || newPos < 0)
+			return false;
+		// If it's a nonempty square, that also isn't the falling piece itself
+		if (m_board[newPos] != 0 && m_board[newPos] != -m_fallingPiece)
+			return false;
+		// If it would hit the side of the board
+		if (abs(oldPos % 10 - newPos % 10) == 9)
+			return false;
+	}
+	return true;
+}
+
+// DOESN'T DO ANY CHECKS
+// JUST MOVES PIECE AND LEAVES ZEROES IN ITS PLACE
+void Board::MovePiece(int rotDelta, int moveDelta)
 {
 	for (int i = 3; i >= 0; i--)
 	{
 		// Get the block with the delta from the map array
-		int absidxOld = m_fallingPieceIdx + GetPieceMap(i);
+		int absidxOld = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
 		m_board[absidxOld] = 0;
 	}
-	if (m_fallingPieceRot < 3)
-		m_fallingPieceRot += rotDelta;
-	else
-		m_fallingPieceRot = 0;
 	for (int i = 3; i >= 0; i--)
 	{
-		int absidxNew = m_fallingPieceIdx + moveDelta + GetPieceMap(i);
+		int absidxNew = m_fallingPieceIdx + moveDelta + GetPieceMap(m_fallingPieceRot + rotDelta, i);
 		m_board[absidxNew] = -m_fallingPiece;
 	}
 
+	m_fallingPieceRot += rotDelta;
+	while (m_fallingPieceRot < 0)
+		m_fallingPieceRot += 4;
+	while (m_fallingPieceRot > 3)
+		m_fallingPieceRot -= 4;
 	m_fallingPieceIdx += moveDelta;
+}
+
+void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
+{
+	// Do movement first because we don't want it to stack with wall kicks
+	if (ValidMove(0, moveDelta))
+		MovePiece(0, moveDelta);
+
+	// Loop through the wallkicks at this rotation until one works or they all fail
+	int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
+	int i = 0;
+	if (m_fallingPiece == TetrominoData::i) // The I piece has a different table of wall kicks per SRS
+		while (i < 5 && !ValidMove(rotDelta, TetrominoData::iWallKicks[wallKickTable][i]))
+			i++;
+	else
+		while (i < 5 && !ValidMove(rotDelta, TetrominoData::wallKicks[wallKickTable][i]))
+			i++;
+
+	if (i != 5)
+	{
+		int wallKick = TetrominoData::wallKicks[wallKickTable][i];
+		MovePiece(rotDelta, wallKick);
+	}
+}
+
+int Board::GetWallKickIdx(int startRot, int endRot)
+{
+	if (startRot == 3 && endRot == 0)
+		return 6;
+	else if (startRot == 0 && endRot == 3)
+		return 7;
+
+	int dir = endRot - startRot;
+	int ret = startRot + endRot;
+	if (dir == 1)
+		ret -= 1;
+	return ret;
 }
 
 int Board::FallingPieceAnchor()

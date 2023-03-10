@@ -24,9 +24,13 @@ public:
 	int FallingPieceAnchor();
 
 private:
+	int GetPieceMap(int rot, int idx);
+	bool ValidMove(int rotDelta, int moveDelta);
+	void MovePiece(int rotDelta, int moveDelta);
 	void UpdateFallingPiece(int rotDelta, int moveDelta);
-	int GetPieceMap(int idx);
+	int GetWallKickIdx(int startRot, int endRot);
 	bool Rot(bool dir);
+
 
 	bool m_gameover;
 
