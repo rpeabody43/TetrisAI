@@ -32,10 +32,11 @@ void Board::NewPiece()
 {
 	std::random_device rd;
 	std::mt19937 eng(rd());
-	std::uniform_int_distribution<> distr(0, 7); // TODO : Proper random
+	std::uniform_int_distribution<> distr(0, 6); // TODO : Proper random
 
-	//m_fallingPiece = distr(eng) + 1;
-	m_fallingPiece = 1;
+	m_fallingPiece = distr(eng) + 1;
+	std::cout << m_fallingPiece << std::endl;
+	//m_fallingPiece = 1;
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
 
@@ -59,10 +60,8 @@ void Board::MoveDown()
 		return;
 	}
 
-	bool positionValid = ValidMove(0, 10);
-
-	// stop piece moving
-	if (!positionValid)
+	bool placeDownImmediately = !ValidMove(0, 10);
+	if (placeDownImmediately)
 	{
 		for (int i = 3; i >= 0; i--)
 		{
@@ -72,7 +71,17 @@ void Board::MoveDown()
 		NewPiece();
 		return;
 	}
-	UpdateFallingPiece(1, 10);
+
+	bool positionValid = ValidMove(1, 10);
+	bool rotated = false;
+	if (!positionValid)
+	{
+		UpdateFallingPiece(1, 0);
+		rotated = true;
+		positionValid = ValidMove(0, 10);
+	}
+
+	UpdateFallingPiece((rotated) ? 0: 1, 10);
 }
 
 bool Board::ValidMove(int rotDelta, int moveDelta)
@@ -127,7 +136,9 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 	// Loop through the wallkicks at this rotation until one works or they all fail
 	int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
 	int i = 0;
-	if (m_fallingPiece == TetrominoData::i) // The I piece has a different table of wall kicks per SRS
+	if (m_fallingPiece == TetrominoData::o) // O pieces should not be rotated / wall kicked at all
+		i = 5; // Easy way to fail the condition below and leave it as is
+	else if (m_fallingPiece == TetrominoData::i) // The I piece has a different table of wall kicks per SRS
 		while (i < 5 && !ValidMove(rotDelta, TetrominoData::iWallKicks[wallKickTable][i]))
 			i++;
 	else

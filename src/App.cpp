@@ -132,7 +132,7 @@ void App::Draw()
 		}
 	}
 
-	/*int anchor = m_pBoard->FallingPieceAnchor();
+	int anchor = m_pBoard->FallingPieceAnchor();
 	int x = (anchor % 10)*squareSize + boardOffsetX;
 	int y = (anchor / 10)*squareSize + boardOffsetY;
 
@@ -145,7 +145,7 @@ void App::Draw()
 	};
 
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
-	SDL_RenderFillRect(m_pRenderer, &anchorSq);*/
+	SDL_RenderFillRect(m_pRenderer, &anchorSq);
 
 	SDL_RenderPresent(m_pRenderer);
 }
