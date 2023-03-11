@@ -11,6 +11,16 @@
 
 #include "headers/App.hpp"
 #include "headers/Board.hpp"
+#include "headers/Tetrominoes.hpp"
+
+
+struct InputDelays {
+	int moveLeft;
+	int moveRight;
+	int rotClockwise;
+	int rotCountClockwise;
+	int softDrop;
+};
 
 App::App(unsigned int screenW, unsigned int screenH)
 	: m_pBoard(nullptr)
@@ -84,6 +94,20 @@ bool App::UnixScaling()
 	return true;
 }
 
+static SDL_Color ConvertHex (int hex)
+{
+	SDL_Color color;
+	// Bitwise right (>>) cuts off last x number of bits
+	// Move enough bits so individual value is rightmost 2 hex digits
+	// After, perform an & operation with 255 to chop off the rest
+	// e.g. 1111 & 0011 == 0011
+	color.r = ((hex >> 24) & 0xFF);
+	color.g = ((hex >> 16) & 0xFF);
+	color.b = ((hex >> 8) & 0xFF);
+	color.a = (hex & 0xFF);
+	return color;
+}
+
 void App::Draw()
 {
 	static int squareSize = 50;
@@ -128,7 +152,9 @@ void App::Draw()
 				squareSize
 			};
 
-			SDL_SetRenderDrawColor(m_pRenderer, 255, 0, 0, 255); // TODO : different colors based on piece
+			int hex = TetrominoData::hexCodes[abs(sq) - 1];
+			SDL_Color color = ConvertHex(hex);
+			SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a); // TODO : different colors based on piece
 			SDL_RenderFillRect(m_pRenderer, &sqRect);
 		}
 	}
@@ -151,8 +177,23 @@ void App::Draw()
 	SDL_RenderPresent(m_pRenderer);
 }
 
+static void PersistantKey(const Uint8* keystate, int scancode, int delay, int& currentDelay, bool& input)
+{
+	if (keystate[scancode])
+	{
+		if (currentDelay == 0)
+			input = true;
+		currentDelay++;
+		if (currentDelay >= delay)
+			currentDelay = 0;
+	}
+	else currentDelay = 0;
+}
+
 void App::Run()
 {
+	InputDelays delays = {};
+
 	bool end = false;
 	while (!end)
 	{
@@ -168,23 +209,19 @@ void App::Run()
 
 			if (event.type == SDL_KEYDOWN)
 			{
-				// Copying Tetris.com controls
-				if (event.key.keysym.sym == SDLK_DOWN)
-					input.softDrop = true;
-				if (event.key.keysym.sym == SDLK_LEFT)
-					input.moveLeft = true;
-				if (event.key.keysym.sym == SDLK_RIGHT)
-					input.moveRight = true;
-				if (event.key.keysym.sym == SDLK_UP)
-					input.rotClockwise = true;
-				if (event.key.keysym.sym == SDLK_z)
-					input.rotCountClockwise = true;
 				if (event.key.keysym.sym == SDLK_c)
 					input.holdPiece = true;
 				if (event.key.keysym.sym == SDLK_SPACE)
 					input.hardDrop = true;
 			}
 		}
+
+		const Uint8* keystate = SDL_GetKeyboardState(NULL);
+		PersistantKey(keystate, SDL_SCANCODE_DOWN, 120, delays.softDrop, input.softDrop);
+		PersistantKey(keystate, SDL_SCANCODE_LEFT, 120, delays.moveLeft, input.moveLeft);
+		PersistantKey(keystate, SDL_SCANCODE_RIGHT, 120, delays.moveRight, input.moveRight);
+		PersistantKey(keystate, SDL_SCANCODE_UP, 360, delays.rotClockwise, input.rotClockwise);
+		PersistantKey(keystate, SDL_SCANCODE_Z, 360, delays.rotCountClockwise, input.rotCountClockwise);
 
 		Uint32 currentTimeMs = SDL_GetTicks();
 		m_pBoard->Update(input, (int)currentTimeMs);

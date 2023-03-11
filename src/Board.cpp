@@ -19,11 +19,6 @@ Board::Board(int fallRate)
 
 int Board::GetPieceMap(int rot, int idx)
 {
-	while (rot < 0)
-		rot += 4;
-	while (rot > 3)
-		rot -= 4;
-
 	int ret = TetrominoData::maps[m_fallingPiece - 1][rot][idx];
 	return ret;
 }
@@ -88,7 +83,8 @@ bool Board::ValidMove(int rotDelta, int moveDelta)
 		if (m_board[newPos] != 0 && m_board[newPos] != -m_fallingPiece)
 			return false;
 		// If it would hit the side of the board
-		if (abs(oldPos % 10 - newPos % 10) == 9)
+		bool closeToEdge = ((oldPos % 10 <= 2) && (newPos % 10 >= 8)) || ((oldPos % 10 >= 8) && (newPos % 10 <= 2));
+		if (closeToEdge)
 			return false;
 	}
 	return true;
@@ -111,10 +107,6 @@ void Board::MovePiece(int rotDelta, int moveDelta)
 	}
 
 	m_fallingPieceRot += rotDelta;
-	while (m_fallingPieceRot < 0)
-		m_fallingPieceRot += 4;
-	while (m_fallingPieceRot > 3)
-		m_fallingPieceRot -= 4;
 	m_fallingPieceIdx += moveDelta;
 }
 
@@ -138,7 +130,11 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 
 	if (i != 5)
 	{
-		int wallKick = TetrominoData::wallKicks[wallKickTable][i];
+		int wallKick;
+		if (m_fallingPiece == TetrominoData::i)
+			wallKick = TetrominoData::iWallKicks[wallKickTable][i];
+		else
+			wallKick = TetrominoData::wallKicks[wallKickTable][i];
 		MovePiece(rotDelta, wallKick);
 	}
 }
@@ -184,6 +180,11 @@ void Board::Update(Input& input, unsigned int ticks)
 		rotDelta += 1;
 	if (input.rotCountClockwise)
 		rotDelta -= 1;
+
+	while (m_fallingPieceRot + rotDelta < 0)
+		rotDelta += 4;
+	while (m_fallingPieceRot + rotDelta > 3)
+		rotDelta -= 4;
 
 	UpdateFallingPiece(rotDelta, moveDelta);
 

@@ -27,6 +27,17 @@ namespace TetrominoData
 		},
 	};
 
+	const unsigned int hexCodes[7] =
+	{
+		0x00C2DEFF, // I
+		0x00418DFF, // J
+		0xFA8901FF, // L
+		0xFAD717FF, // O
+		0x00BA71FF, // S
+		0xF43545FF, // T
+		0x5F2879FF  // A
+	};
+
 	const int wallKicks[8][5] =
 	{
 		{0, -1, -11,  20,  19}, // 0 >> 1

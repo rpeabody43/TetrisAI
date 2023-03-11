@@ -11,6 +11,7 @@ namespace TetrominoData
 	const int t = 7;
 
 	extern const int maps[7][4][4];
+	extern const unsigned int hexCodes[7];
 	extern const int wallKicks[8][5];
 	extern const int iWallKicks[8][5];
 }
