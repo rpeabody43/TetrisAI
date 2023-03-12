@@ -22,6 +22,7 @@ public:
 
 	void NewPiece();
 	void MoveDown();
+	void HardDrop();
 	void Update(Input& inputs, unsigned int ticks);
 	int IdxConvert(int x, int y);
 	int GetSquare(int x, int y);
@@ -36,7 +37,7 @@ public:
 private:
 	int GetPieceMap(int rot, int idx);
 	bool ValidMove(int rotDelta, int moveDelta);
-	void MovePiece(int rotDelta, int moveDelta);
+	void MovePiece(int rotDelta, int moveDelta, bool freeze);
 	void UpdateFallingPiece(int rotDelta, int moveDelta);
 	int GetWallKickIdx(int startRot, int endRot);
 	bool Rot(bool dir);

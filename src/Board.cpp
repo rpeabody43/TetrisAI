@@ -58,16 +58,21 @@ void Board::MoveDown()
 	bool placeDownImmediately = !ValidMove(0, 10);
 	if (placeDownImmediately)
 	{
-		for (int i = 3; i >= 0; i--)
-		{
-			int idx = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
-			m_board[idx] = m_fallingPiece;
-		}
+		MovePiece(0, 0, true);
 		NewPiece();
 		return;
 	}
 
 	UpdateFallingPiece(0, 10);
+}
+
+void Board::HardDrop()
+{
+	int delta = 0;
+	while (ValidMove(0, delta+10))
+		delta += 10;
+	MovePiece(0, delta, true);
+	NewPiece();
 }
 
 bool Board::ValidMove(int rotDelta, int moveDelta)
@@ -92,7 +97,7 @@ bool Board::ValidMove(int rotDelta, int moveDelta)
 
 // DOESN'T DO ANY CHECKS
 // JUST MOVES PIECE AND LEAVES ZEROES IN ITS PLACE
-void Board::MovePiece(int rotDelta, int moveDelta)
+void Board::MovePiece(int rotDelta, int moveDelta, bool freeze)
 {
 	for (int i = 3; i >= 0; i--)
 	{
@@ -103,7 +108,7 @@ void Board::MovePiece(int rotDelta, int moveDelta)
 	for (int i = 3; i >= 0; i--)
 	{
 		int absidxNew = m_fallingPieceIdx + moveDelta + GetPieceMap(m_fallingPieceRot + rotDelta, i);
-		m_board[absidxNew] = -m_fallingPiece;
+		m_board[absidxNew] = freeze ? m_fallingPiece : -m_fallingPiece;
 	}
 
 	m_fallingPieceRot += rotDelta;
@@ -114,12 +119,12 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 {
 	// Do movement first because we don't want it to stack with wall kicks
 	if (ValidMove(0, moveDelta))
-		MovePiece(0, moveDelta);
+		MovePiece(0, moveDelta, false);
 
 	// Loop through the wallkicks at this rotation until one works or they all fail
 	int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
 	int i = 0;
-	if (m_fallingPiece == TetrominoData::o) // O pieces should not be rotated / wall kicked at all
+	if (m_fallingPiece == TetrominoData::o || rotDelta == 0) // O pieces should not be rotated / wall kicked at all
 		i = 5; // Easy way to fail the condition below and leave it as is
 	else if (m_fallingPiece == TetrominoData::i) // The I piece has a different table of wall kicks per SRS
 		while (i < 5 && !ValidMove(rotDelta, TetrominoData::iWallKicks[wallKickTable][i]))
@@ -135,7 +140,7 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 			wallKick = TetrominoData::iWallKicks[wallKickTable][i];
 		else
 			wallKick = TetrominoData::wallKicks[wallKickTable][i];
-		MovePiece(rotDelta, wallKick);
+		MovePiece(rotDelta, wallKick, false);
 	}
 }
 
@@ -180,6 +185,8 @@ void Board::Update(Input& input, unsigned int ticks)
 		rotDelta += 1;
 	if (input.rotCountClockwise)
 		rotDelta -= 1;
+	if (input.hardDrop)
+		HardDrop();
 
 	while (m_fallingPieceRot + rotDelta < 0)
 		rotDelta += 4;
