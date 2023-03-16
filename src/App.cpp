@@ -14,12 +14,12 @@
 #include "headers/Tetrominoes.hpp"
 
 
-struct InputDelays {
-	int moveLeft;
-	int moveRight;
-	int rotClockwise;
-	int rotCountClockwise;
-	int softDrop;
+struct KeyHandler {
+	int scancode;
+	int delay;
+	int firstDelay; // Add more input buffer between the first and second input
+	int currentDelay;
+	int inputCount;
 };
 
 App::App(unsigned int screenW, unsigned int screenH)
@@ -110,6 +110,7 @@ static SDL_Color ConvertHex (int hex)
 
 void App::Draw()
 {
+	int startTime = SDL_GetTicks();
 	static int squareSize = 50;
 
 	static int boardW = m_pBoard->WIDTH * squareSize;
@@ -177,22 +178,41 @@ void App::Draw()
 	SDL_RenderPresent(m_pRenderer);
 }
 
-static void PersistantKey(const Uint8* keystate, int scancode, int delay, int& currentDelay, bool& input)
+static void PersistantKey(const Uint8* keystate, KeyHandler& k, bool& input)
 {
-	if (keystate[scancode])
+	if (keystate[k.scancode])
 	{
-		if (currentDelay == 0)
+		if (k.currentDelay == 0)
+		{
 			input = true;
-		currentDelay++;
-		if (currentDelay >= delay)
-			currentDelay = 0;
+			k.inputCount++;
+			std::cout << k.inputCount << std::endl;
+		}
+		SDL_Delay(1); // Delay one millisecond for framerate-independence
+		k.currentDelay++;
+		if (k.inputCount == 1)
+		{
+			if (k.currentDelay >= k.firstDelay)
+				k.currentDelay = 0;
+		}
+		else if (k.currentDelay >= k.delay)
+			k.currentDelay = 0;
 	}
-	else currentDelay = 0;
+	else
+	{
+		k.currentDelay = 0;
+		k.inputCount = 0;
+	}
 }
 
 void App::Run()
 {
-	InputDelays delays = {};
+	KeyHandler moveLeft			 = { SDL_SCANCODE_LEFT	, 25, 50, 0, 0};
+	KeyHandler moveRight		 = { SDL_SCANCODE_RIGHT	, 25, 50, 0, 0};
+	KeyHandler softDrop			 = { SDL_SCANCODE_DOWN	, 20, 20, 0, 0};
+	KeyHandler rotClockwise		 = { SDL_SCANCODE_UP	, 75, 75, 0, 0};
+	KeyHandler rotCountClockwise = { SDL_SCANCODE_Z		, 75, 75, 0, 0};
+
 
 	bool end = false;
 	while (!end)
@@ -217,11 +237,12 @@ void App::Run()
 		}
 
 		const Uint8* keystate = SDL_GetKeyboardState(NULL);
-		PersistantKey(keystate, SDL_SCANCODE_DOWN, 120, delays.softDrop, input.softDrop);
-		PersistantKey(keystate, SDL_SCANCODE_LEFT, 120, delays.moveLeft, input.moveLeft);
-		PersistantKey(keystate, SDL_SCANCODE_RIGHT, 120, delays.moveRight, input.moveRight);
-		PersistantKey(keystate, SDL_SCANCODE_UP, 360, delays.rotClockwise, input.rotClockwise);
-		PersistantKey(keystate, SDL_SCANCODE_Z, 360, delays.rotCountClockwise, input.rotCountClockwise);
+
+		PersistantKey(keystate, softDrop, input.softDrop);
+		PersistantKey(keystate, moveLeft, input.moveLeft);
+		PersistantKey(keystate, moveRight, input.moveRight);
+		PersistantKey(keystate, rotClockwise, input.rotClockwise);
+		PersistantKey(keystate, rotCountClockwise, input.rotCountClockwise);
 
 		Uint32 currentTimeMs = SDL_GetTicks();
 		m_pBoard->Update(input, (int)currentTimeMs);
