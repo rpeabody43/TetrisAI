@@ -4,6 +4,8 @@
 
 int main(int argc, char* argv[])
 {
+	srand(time(0)); // Set the seed for random numbers
+
 	unsigned int windowW = 1280;
 	unsigned int windowH = 960;
 
