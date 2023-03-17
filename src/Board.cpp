@@ -61,14 +61,16 @@ void Board::ClearLines()
 	const int startCol = Col(start);
 	int linesCleared = 0;
 
-	for (int y = startRow; y < std::min(startRow+4, HEIGHT); y++)
+	for (int y = startRow; y < std::min(startRow+5, HEIGHT); y++)
 	{
 		bool lineComplete = true;
 		for (int x = 0; x < 10 && lineComplete; x++)
 		{
 			if (GetSquare(x, y) == 0)
 				lineComplete = false;
+			std::cout << GetSquare(x, y) << " ";
 		}
+		std::cout << std::endl;
 
 		if (lineComplete)
 		{
@@ -85,6 +87,7 @@ void Board::ClearLines()
 			}
 		}
 	}
+	std::cout << std::endl;
 
 	if (linesCleared == 0) return;
 	for (int tempY = startRow - linesCleared; tempY >= 0; tempY--)
@@ -101,6 +104,7 @@ void Board::ClearLines()
 	{
 		m_board[buffer] = 0;
 	}
+
 }
 
 void Board::Fall()
