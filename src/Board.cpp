@@ -36,7 +36,7 @@ void Board::NewPiece()
 	}
 
 	m_fallingPiece = m_bag[m_bagIdx];
-	//m_fallingPiece = 1;
+	//m_fallingPiece = 7;
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
 
@@ -61,12 +61,14 @@ void Board::ClearLines()
 	const int startCol = Col(start);
 	int linesCleared = 0;
 
-	for (int y = startRow; y < startRow + 4; y++)
+	for (int y = startRow; y < std::min(startRow+4, HEIGHT); y++)
 	{
 		bool lineComplete = true;
 		for (int x = 0; x < 10 && lineComplete; x++)
+		{
 			if (GetSquare(x, y) == 0)
 				lineComplete = false;
+		}
 
 		if (lineComplete)
 		{
@@ -83,8 +85,6 @@ void Board::ClearLines()
 			}
 		}
 	}
-
-	std::cout << linesCleared << std::endl;
 
 	if (linesCleared == 0) return;
 	for (int tempY = startRow - linesCleared; tempY >= 0; tempY--)
