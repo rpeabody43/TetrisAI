@@ -33,9 +33,11 @@ public:
 
 private:
 	int GetPieceMap(int rot, int idx);
+
 	bool ValidMove(int rotDelta, int moveDelta);
 	void MovePiece(int rotDelta, int moveDelta, bool freeze);
 	void UpdateFallingPiece(int rotDelta, int moveDelta);
+
 	int GetWallKickIdx(int startRot, int endRot);
 	void ClearLines();
 
@@ -50,7 +52,11 @@ private:
 	int m_fallRate;
 
 	int m_board[180];
+
 	int m_fallingPiece;
 	int m_fallingPieceRot;
 	int m_fallingPieceIdx;
+
+	int m_bag[7];
+	int m_bagIdx;
 };
