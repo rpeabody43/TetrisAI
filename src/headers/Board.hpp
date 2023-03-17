@@ -21,16 +21,13 @@ public:
 	Board(int fallRate);
 
 	void NewPiece();
-	void MoveDown();
+	void Fall();
 	void HardDrop();
 	void Update(Input& inputs, unsigned int ticks);
 	int IdxConvert(int x, int y);
 	int GetSquare(int x, int y);
 	
 	int TicksPerStep();
-
-	bool RotRight();
-	bool RotLeft();
 
 	int FallingPieceAnchor();
 
@@ -40,7 +37,10 @@ private:
 	void MovePiece(int rotDelta, int moveDelta, bool freeze);
 	void UpdateFallingPiece(int rotDelta, int moveDelta);
 	int GetWallKickIdx(int startRot, int endRot);
-	bool Rot(bool dir);
+	void ClearLines();
+
+	static int Row(int idx);
+	static int Col(int idx);
 
 
 	bool m_gameover;

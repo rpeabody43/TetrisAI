@@ -46,7 +46,56 @@ void Board::NewPiece()
 	}
 }
 
-void Board::MoveDown()
+void Board::ClearLines()
+{
+	const int start = m_fallingPieceIdx;
+	const int startRow = Row(start);
+	const int startCol = Col(start);
+	int linesCleared = 0;
+
+	for (int y = startRow; y < startRow + 4; y++)
+	{
+		bool lineComplete = true;
+		for (int x = 0; x < 10 && lineComplete; x++)
+			if (GetSquare(x, y) == 0)
+				lineComplete = false;
+
+		if (lineComplete)
+		{
+			linesCleared++;
+
+			for (int tempY = (y > 0) ? y - 1 : y; tempY >= startRow-1; tempY--)
+			{
+				for (int tempX = 0; tempX < 10; tempX++)
+				{
+					int currentIdx = IdxConvert(tempX, tempY);
+					int copyIdx = IdxConvert(tempX, tempY + 1);
+					m_board[copyIdx] = m_board[currentIdx];
+				}
+			}
+		}
+	}
+
+	std::cout << linesCleared << std::endl;
+
+	if (linesCleared == 0) return;
+	for (int tempY = startRow - linesCleared; tempY >= 0; tempY--)
+	{
+		for (int tempX = 0; tempX < 10; tempX++)
+		{
+			int currentIdx = IdxConvert(tempX, tempY);
+			int copyIdx = IdxConvert(tempX, tempY + linesCleared);
+			m_board[copyIdx] = m_board[currentIdx];
+		}
+	}
+
+	for (int buffer = 0; buffer < IdxConvert(9, linesCleared); buffer++)
+	{
+		m_board[buffer] = 0;
+	}
+}
+
+void Board::Fall()
 {
 	m_lastTicks = m_ticks;
 	if (m_fallingPiece == 0)
@@ -59,6 +108,7 @@ void Board::MoveDown()
 	if (placeDownImmediately)
 	{
 		MovePiece(0, 0, true);
+		ClearLines();
 		NewPiece();
 		return;
 	}
@@ -72,6 +122,7 @@ void Board::HardDrop()
 	while (ValidMove(0, delta+10))
 		delta += 10;
 	MovePiece(0, delta, true);
+	ClearLines();
 	NewPiece();
 }
 
@@ -82,13 +133,15 @@ bool Board::ValidMove(int rotDelta, int moveDelta)
 		int oldPos = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
 		int newPos = m_fallingPieceIdx + moveDelta + GetPieceMap(m_fallingPieceRot+rotDelta, i);
 		// If it's an index error on either side
-		if (newPos > HEIGHT * WIDTH || newPos < 0)
+		if (newPos >= HEIGHT * WIDTH || newPos < 0)
 			return false;
 		// If it's a nonempty square, that also isn't the falling piece itself
 		if (m_board[newPos] != 0 && m_board[newPos] != -m_fallingPiece)
 			return false;
 		// If it would hit the side of the board
-		bool closeToEdge = ((oldPos % 10 <= 2) && (newPos % 10 >= 8)) || ((oldPos % 10 >= 8) && (newPos % 10 <= 2));
+		int oldCol = Col(oldPos);
+		int newCol = Col(newPos);
+		bool closeToEdge = ((oldCol <= 2) && (newCol >= 8)) || ((oldCol >= 8) && (newCol <= 2));
 		if (closeToEdge)
 			return false;
 	}
@@ -169,7 +222,7 @@ void Board::Update(Input& input, unsigned int ticks)
 	m_ticks = ticks;
 	if (m_ticks - m_lastTicks >= m_fallRate)
 	{
-		MoveDown();
+		Fall();
 	}
 
 	int moveDelta = 0;
@@ -180,7 +233,7 @@ void Board::Update(Input& input, unsigned int ticks)
 	if (input.moveRight)
 		moveDelta += 1;
 	if (input.softDrop)
-		MoveDown();
+		Fall();
 	if (input.rotClockwise)
 		rotDelta += 1;
 	if (input.rotCountClockwise)
@@ -212,19 +265,12 @@ int Board::TicksPerStep()
 	return m_fallRate;
 }
 
-bool Board::RotRight()
+int Board::Row(int idx)
 {
-	return Rot(true);
+	return idx / WIDTH;
 }
 
-bool Board::RotLeft()
+int Board::Col(int idx)
 {
-	return Rot(false);
-}
-
-bool Board::Rot(bool dir)
-{
-	int factor = (dir) ? 1 : -1;
-	UpdateFallingPiece(factor, 0);
-	return true;
+	return idx % WIDTH;
 }
