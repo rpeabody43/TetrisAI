@@ -186,7 +186,6 @@ static void PersistantKey(const Uint8* keystate, KeyHandler& k, bool& input)
 		{
 			input = true;
 			k.inputCount++;
-			std::cout << k.inputCount << std::endl;
 		}
 		SDL_Delay(1); // Delay one millisecond for framerate-independence
 		k.currentDelay++;
