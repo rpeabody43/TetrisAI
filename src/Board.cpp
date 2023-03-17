@@ -1,5 +1,5 @@
-#include <random>
 #include <iostream>
+#include <algorithm> // For randomization
 
 #include "headers/Tetrominoes.hpp"
 #include "headers/Board.hpp"
@@ -13,8 +13,12 @@ Board::Board(int fallRate)
 	, m_fallingPieceRot(0)
 	, m_fallingPieceIdx(3)
 	, m_board()
+	, m_bag()
+	, m_bagIdx(7)
 {
 	m_fallRate = fallRate;
+	for (int i = 0; i < 7; i++)
+		m_bag[i] = i + 1;
 }
 
 int Board::GetPieceMap(int rot, int idx)
@@ -25,14 +29,18 @@ int Board::GetPieceMap(int rot, int idx)
 
 void Board::NewPiece()
 {
-	std::random_device rd;
-	std::mt19937 eng(rd());
-	std::uniform_int_distribution<> distr(0, 6); // TODO : Proper random
+	if (m_bagIdx >= 7)
+	{
+		std::random_shuffle(std::begin(m_bag), std::end(m_bag));
+		m_bagIdx = 0;
+	}
 
-	m_fallingPiece = distr(eng) + 1;
+	m_fallingPiece = m_bag[m_bagIdx];
 	//m_fallingPiece = 1;
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
+
+	m_bagIdx++;
 
 	int start = m_fallingPieceIdx;
 	for (int i = 3; i >= 0; i--)
