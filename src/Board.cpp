@@ -68,15 +68,13 @@ void Board::ClearLines()
 		{
 			if (GetSquare(x, y) == 0)
 				lineComplete = false;
-			std::cout << GetSquare(x, y) << " ";
 		}
-		std::cout << std::endl;
 
 		if (lineComplete)
 		{
 			linesCleared++;
 
-			for (int tempY = (y > 0) ? y - 1 : y; tempY >= startRow-1; tempY--)
+			for (int tempY = y - 1; tempY >= startRow - 1; tempY--)
 			{
 				for (int tempX = 0; tempX < 10; tempX++)
 				{
@@ -87,10 +85,9 @@ void Board::ClearLines()
 			}
 		}
 	}
-	std::cout << std::endl;
 
 	if (linesCleared == 0) return;
-	for (int tempY = startRow - linesCleared; tempY >= 0; tempY--)
+	for (int tempY = startRow - 1; tempY >= 0; tempY--)
 	{
 		for (int tempX = 0; tempX < 10; tempX++)
 		{
