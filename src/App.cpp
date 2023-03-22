@@ -155,9 +155,33 @@ void App::Draw()
 
 			int hex = TetrominoData::hexCodes[abs(sq) - 1];
 			SDL_Color color = ConvertHex(hex);
-			SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a); // TODO : different colors based on piece
+			SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
 			SDL_RenderFillRect(m_pRenderer, &sqRect);
 		}
+	}
+
+	const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
+	const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
+
+	int heldPiece = m_pBoard->GetHeldPiece();
+
+	if (heldPiece > 0)
+	for (int i = 0; i < 4; i++)
+	{
+		int delta = m_pBoard->GetPieceMap(heldPiece, 0, i);
+		int r = Board::Row(delta);
+		int c = Board::Col(delta);
+		SDL_Rect heldPieceSq = {
+			heldPieceOffsetX + c * squareSize,
+			heldPieceOffsetY + r * squareSize,
+			squareSize,
+			squareSize
+		};
+
+		int hex = TetrominoData::hexCodes[heldPiece - 1];
+		SDL_Color color = ConvertHex(hex);
+		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a); 
+		SDL_RenderFillRect(m_pRenderer, &heldPieceSq);
 	}
 
 	/*int anchor = m_pBoard->FallingPieceAnchor();

@@ -20,19 +20,29 @@ public:
 
 	Board(int fallRate);
 
-	void NewPiece();
-	void Fall();
-	void HardDrop();
 	void Update(Input& inputs, unsigned int ticks);
+
 	int IdxConvert(int x, int y);
 	int GetSquare(int x, int y);
+
+	int GetPieceMap(int rot, int idx);
+	int GetPieceMap(int piece, int rot, int idx);
 	
 	int TicksPerStep();
 
 	int FallingPieceAnchor();
+	int GetHeldPiece();
+
+	static int Row(int idx);
+	static int Col(int idx);
 
 private:
-	int GetPieceMap(int rot, int idx);
+	void HoldPiece();
+	void NewPiece();
+	void NewPiece(int piece);
+	void Fall();
+	void HardDrop();
+
 
 	bool ValidMove(int rotDelta, int moveDelta);
 	void MovePiece(int rotDelta, int moveDelta, bool freeze);
@@ -41,8 +51,6 @@ private:
 	int GetWallKickIdx(int startRot, int endRot);
 	void ClearLines();
 
-	static int Row(int idx);
-	static int Col(int idx);
 
 
 	bool m_gameover;
@@ -59,4 +67,7 @@ private:
 
 	int m_bag[7];
 	int m_bagIdx;
+
+	int m_heldPiece;
+	bool m_alreadyHeld;
 };

@@ -15,6 +15,8 @@ Board::Board(int fallRate)
 	, m_board()
 	, m_bag()
 	, m_bagIdx(7)
+	, m_heldPiece(0)
+	, m_alreadyHeld(false)
 {
 	m_fallRate = fallRate;
 	for (int i = 0; i < 7; i++)
@@ -27,6 +29,12 @@ int Board::GetPieceMap(int rot, int idx)
 	return ret;
 }
 
+int Board::GetPieceMap(int piece, int rot, int idx)
+{
+	int ret = TetrominoData::maps[piece - 1][rot][idx];
+	return ret;
+}
+
 void Board::NewPiece()
 {
 	if (m_bagIdx >= 7)
@@ -35,8 +43,13 @@ void Board::NewPiece()
 		m_bagIdx = 0;
 	}
 
-	m_fallingPiece = m_bag[m_bagIdx];
-	//m_fallingPiece = 7;
+	int piece = m_bag[m_bagIdx];
+	NewPiece(piece);
+}
+
+void Board::NewPiece(int piece)
+{
+	m_fallingPiece = piece;
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
 
@@ -52,6 +65,24 @@ void Board::NewPiece()
 		}
 		else m_gameover = true;
 	}
+}
+
+void Board::HoldPiece()
+{
+	if (m_alreadyHeld) return;
+	for (int i = 3; i >= 0; i--)
+	{
+		int idx = m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, i);
+		m_board[idx] = 0;
+	}
+
+	int prevHeldPiece = m_heldPiece;
+	m_heldPiece = m_fallingPiece;
+	if (prevHeldPiece == 0)
+		NewPiece();
+	else
+		NewPiece(prevHeldPiece);
+	m_alreadyHeld = true;
 }
 
 void Board::ClearLines()
@@ -173,6 +204,10 @@ void Board::MovePiece(int rotDelta, int moveDelta, bool freeze)
 		m_board[absidxNew] = freeze ? m_fallingPiece : -m_fallingPiece;
 	}
 
+	// The held piece becomes available when the current falling piece is locked
+	if (freeze)
+		m_alreadyHeld = false;
+
 	m_fallingPieceRot += rotDelta;
 	m_fallingPieceIdx += moveDelta;
 }
@@ -249,6 +284,8 @@ void Board::Update(Input& input, unsigned int ticks)
 		rotDelta -= 1;
 	if (input.hardDrop)
 		HardDrop();
+	if (input.holdPiece)
+		HoldPiece();
 
 	while (m_fallingPieceRot + rotDelta < 0)
 		rotDelta += 4;
@@ -282,4 +319,9 @@ int Board::Row(int idx)
 int Board::Col(int idx)
 {
 	return idx % WIDTH;
+}
+
+int Board::GetHeldPiece()
+{
+	return m_heldPiece;
 }
