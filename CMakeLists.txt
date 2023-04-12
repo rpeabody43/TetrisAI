@@ -5,15 +5,15 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("TetrisAI")
 
-
+# Add SDL Main Library
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
+# Add SDL Text Library
+find_package(SDL2_ttf REQUIRED)
 
 # Add source to this project's executable.
-set(SOURCES src/main.cpp src/Board.cpp src/Tetrominoes.cpp "src/App.cpp")
-add_executable(TetrisAI ${SOURCES})
-target_include_directories(TetrisAI PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/headers)
+set(SOURCES src/main.cpp src/Board.cpp src/Tetrominoes.cpp src/App.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/headers)
 
-target_link_libraries(TetrisAI SDL2::SDL2 SDL2::SDL2main)
-
-# TODO: Add tests and install targets if needed.
+include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} SDL2::SDL2 SDL2::SDL2main SDL2_ttf::SDL2_ttf)
