@@ -18,6 +18,7 @@ public:
 private:
 	bool UnixScaling();
 	void Draw();
+	void DrawPiece(int x, int y, int piece, int sqSize);
 
 	unsigned int m_screenW;
 	unsigned int m_screenH;

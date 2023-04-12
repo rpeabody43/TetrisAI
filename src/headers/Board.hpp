@@ -27,6 +27,8 @@ public:
 
 	int GetPieceMap(int rot, int idx);
 	int GetPieceMap(int piece, int rot, int idx);
+
+	int NextPiece(int delta);
 	
 	int TicksPerStep();
 

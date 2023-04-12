@@ -20,7 +20,9 @@ Board::Board(int fallRate)
 {
 	m_fallRate = fallRate;
 	for (int i = 0; i < 7; i++)
+	{
 		m_bag[i] = i + 1;
+	}
 }
 
 int Board::GetPieceMap(int rot, int idx)
@@ -35,6 +37,19 @@ int Board::GetPieceMap(int piece, int rot, int idx)
 	return ret;
 }
 
+int Board::NextPiece(int delta)
+{
+	int idx = m_bagIdx + delta;
+	if (idx >= 7)
+	{
+		// 
+		std::random_shuffle(std::begin(m_bag), std::end(m_bag));
+		m_bagIdx = 0;
+	}
+
+	return m_bag[m_bagIdx];
+}
+
 void Board::NewPiece()
 {
 	if (m_bagIdx >= 7)
@@ -43,7 +58,7 @@ void Board::NewPiece()
 		m_bagIdx = 0;
 	}
 
-	int piece = m_bag[m_bagIdx];
+	int piece = NextPiece(0);
 	NewPiece(piece);
 }
 

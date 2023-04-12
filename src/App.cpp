@@ -160,29 +160,16 @@ void App::Draw()
 		}
 	}
 
-	const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
-	const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
+	
 
 	int heldPiece = m_pBoard->GetHeldPiece();
-
 	if (heldPiece > 0)
-	for (int i = 0; i < 4; i++)
 	{
-		int delta = m_pBoard->GetPieceMap(heldPiece, 0, i);
-		int r = Board::Row(delta);
-		int c = Board::Col(delta);
-		SDL_Rect heldPieceSq = {
-			heldPieceOffsetX + c * squareSize,
-			heldPieceOffsetY + r * squareSize,
-			squareSize,
-			squareSize
-		};
-
-		int hex = TetrominoData::hexCodes[heldPiece - 1];
-		SDL_Color color = ConvertHex(hex);
-		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a); 
-		SDL_RenderFillRect(m_pRenderer, &heldPieceSq);
+		const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
+		const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
+		DrawPiece(heldPieceOffsetX, heldPieceOffsetY, heldPiece, squareSize);
 	}
+	
 
 	/*int anchor = m_pBoard->FallingPieceAnchor();
 	int x = (anchor % 10)*squareSize + boardOffsetX;
@@ -200,6 +187,27 @@ void App::Draw()
 	SDL_RenderFillRect(m_pRenderer, &anchorSq);*/
 
 	SDL_RenderPresent(m_pRenderer);
+}
+
+void App::DrawPiece(int x, int y, int piece, int sqSize)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		int delta = m_pBoard->GetPieceMap(piece, 0, i);
+		int r = Board::Row(delta);
+		int c = Board::Col(delta);
+		SDL_Rect heldPieceSq = {
+			x + c * sqSize,
+			x + r * sqSize,
+			sqSize,
+			sqSize
+		};
+
+		int hex = TetrominoData::hexCodes[piece - 1];
+		SDL_Color color = ConvertHex(hex);
+		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
+		SDL_RenderFillRect(m_pRenderer, &heldPieceSq);
+	}
 }
 
 static void PersistantKey(const Uint8* keystate, KeyHandler& k, bool& input)
