@@ -1,6 +1,9 @@
 #include <iostream>
+#include <string>
 
 #include <SDL.h>
+#include <SDL_ttf.h>
+
 
 #if defined(_WIN32) || defined(WIN32)
 
@@ -26,6 +29,7 @@ App::App(unsigned int screenW, unsigned int screenH)
 	: m_pBoard(nullptr)
 	, m_pRenderer(nullptr)
 	, m_pWindow(nullptr)
+	, m_pFont(nullptr)
 {
 	m_screenW = screenW;
 	m_screenH = screenH;
@@ -46,6 +50,8 @@ bool App::Init()
 		return false;
 	}
 
+	TTF_Init();
+
 	// Fix for non-native scaling/DPI (150% in Windows, etc.)
 #ifdef OS_WINDOWS
 	SetProcessDPIAware();
@@ -62,6 +68,8 @@ bool App::Init()
 
 	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_SOFTWARE);
 	
+	m_pFont = TTF_OpenFont("Retro Gaming.ttf", 28);
+
 #ifdef __unix__
 	if (!UnixScaling())
 		return false;
@@ -110,22 +118,22 @@ static SDL_Color ConvertHex (int hex)
 
 void App::Draw()
 {
-	int startTime = SDL_GetTicks();
+	//int startTime = SDL_GetTicks();
 	static int squareSize = 50;
 
-	static int boardW = m_pBoard->WIDTH * squareSize;
-	static int boardH = m_pBoard->HEIGHT * squareSize;
+	static int boardScreenW = m_pBoard->WIDTH * squareSize;
+	static int boardScreenH = m_pBoard->HEIGHT * squareSize;
 
-	static int boardOffsetX = (m_screenW - boardW) / 2;
-	static int boardOffsetY = (m_screenH - boardH) / 2;
+	static int boardOffsetX = (m_screenW - boardScreenW) / 2;
+	static int boardOffsetY = (m_screenH - boardScreenH) / 2;
 
 	// offsets are so the blocks don't overlap with the border
 	SDL_Rect boardOutline =
 	{
 		boardOffsetX-1,
 		boardOffsetY-1,
-		boardW+2,
-		boardH+2
+		boardScreenW+2,
+		boardScreenH+2
 	};
 
 	SDL_SetRenderDrawColor(m_pRenderer, 18, 18, 18, SDL_ALPHA_OPAQUE);
@@ -160,7 +168,7 @@ void App::Draw()
 		}
 	}
 
-	
+	SDL_Color txtColor = { 255, 255, 255 };
 
 	int heldPiece = m_pBoard->GetHeldPiece();
 	if (heldPiece > 0)
@@ -168,9 +176,18 @@ void App::Draw()
 		const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
 		const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
 		DrawPiece(heldPieceOffsetX, heldPieceOffsetY, heldPiece, squareSize);
+		DrawTxt(heldPieceOffsetX + 2 * squareSize, heldPieceOffsetY - squareSize, "HOLD", txtColor);
 	}
-	
 
+	const int upNextOffsetX = boardOffsetX + boardScreenW + 2 * squareSize;
+	const int upNextOffsetY = boardOffsetY + 2 * squareSize;
+	for (int i = 0; i < 3; i++) 
+	{
+		DrawPiece(upNextOffsetX, upNextOffsetY + 3*i*squareSize, m_pBoard->NthPiece(i), squareSize);
+	}
+	DrawTxt(upNextOffsetX + 2 * squareSize, upNextOffsetY - squareSize, "UP NEXT", txtColor);
+
+	
 	/*int anchor = m_pBoard->FallingPieceAnchor();
 	int x = (anchor % 10)*squareSize + boardOffsetX;
 	int y = (anchor / 10)*squareSize + boardOffsetY;
@@ -191,6 +208,10 @@ void App::Draw()
 
 void App::DrawPiece(int x, int y, int piece, int sqSize)
 {
+	if (piece - 1 != 0 && piece - 1 != 3)
+		x += sqSize / 2;
+	if (piece - 1 == 0)
+		y -= sqSize;
 	for (int i = 0; i < 4; i++)
 	{
 		int delta = m_pBoard->GetPieceMap(piece, 0, i);
@@ -198,7 +219,7 @@ void App::DrawPiece(int x, int y, int piece, int sqSize)
 		int c = Board::Col(delta);
 		SDL_Rect heldPieceSq = {
 			x + c * sqSize,
-			x + r * sqSize,
+			y + r * sqSize,
 			sqSize,
 			sqSize
 		};
@@ -208,6 +229,44 @@ void App::DrawPiece(int x, int y, int piece, int sqSize)
 		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
 		SDL_RenderFillRect(m_pRenderer, &heldPieceSq);
 	}
+}
+
+void App::DrawTxt(int x, int y, const char* txt, SDL_Color color) 
+{
+	if (m_pFont == NULL)
+	{
+		std::cout << "Failed to load font" << std::endl;
+		std::cout << "SDL_TTF ERR: " << TTF_GetError() << std::endl;
+		return;
+	}
+	SDL_Surface* textSurface = TTF_RenderText_Solid(m_pFont, txt, color);
+	if (textSurface == NULL) 
+	{
+		std::cout << "Failed to initialize text surface" << std::endl;
+		return;
+	}
+	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(m_pRenderer, textSurface);
+	if (textTexture == NULL) 
+	{
+		std::cout << "Failed to initialize text texture" << std::endl;
+		return;
+	}
+	
+	SDL_Rect src;
+	src.x = 0;
+	src.y = 0;
+	src.w = textSurface->w;
+	src.h = textSurface->h;
+	SDL_Rect dst;
+	dst.x = x - src.w / 2;
+	dst.y = y - src.h / 2;
+	dst.w = src.w;
+	dst.h = src.h;
+
+
+	SDL_RenderCopy(m_pRenderer, textTexture, &src, &dst);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(textTexture);
 }
 
 static void PersistantKey(const Uint8* keystate, KeyHandler& k, bool& input)
@@ -238,13 +297,13 @@ static void PersistantKey(const Uint8* keystate, KeyHandler& k, bool& input)
 
 void App::Run()
 {
-	KeyHandler moveLeft			 = { SDL_SCANCODE_LEFT	, 25, 50, 0, 0};
-	KeyHandler moveRight		 = { SDL_SCANCODE_RIGHT	, 25, 50, 0, 0};
-	KeyHandler softDrop			 = { SDL_SCANCODE_DOWN	, 20, 20, 0, 0};
-	KeyHandler rotClockwise		 = { SDL_SCANCODE_UP	, 75, 75, 0, 0};
-	KeyHandler rotCountClockwise = { SDL_SCANCODE_Z		, 75, 75, 0, 0};
+	KeyHandler moveLeft			 = { SDL_SCANCODE_LEFT	, 25, 50, 0, 0 };
+	KeyHandler moveRight		 = { SDL_SCANCODE_RIGHT	, 25, 50, 0, 0 };
+	KeyHandler softDrop			 = { SDL_SCANCODE_DOWN	, 20, 20, 0, 0 };
+	KeyHandler rotClockwise		 = { SDL_SCANCODE_UP	, 75, 75, 0, 0 };
+	KeyHandler rotCountClockwise = { SDL_SCANCODE_Z		, 75, 75, 0, 0 };
 
-
+ 
 	bool end = false;
 	while (!end)
 	{
@@ -288,7 +347,10 @@ void App::ShutDown()
 	delete m_pBoard;
 	m_pBoard = nullptr;
 
+	SDL_DestroyRenderer(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
+	TTF_CloseFont(m_pFont);
 
+	TTF_Quit();
 	SDL_Quit();
 }

@@ -28,7 +28,7 @@ public:
 	int GetPieceMap(int rot, int idx);
 	int GetPieceMap(int piece, int rot, int idx);
 
-	int NextPiece(int delta);
+	int NthPiece(int delta);
 	
 	int TicksPerStep();
 
@@ -40,6 +40,8 @@ public:
 
 private:
 	void HoldPiece();
+	void RandomizeBag();
+	void NextPiece();
 	void NewPiece();
 	void NewPiece(int piece);
 	void Fall();
@@ -67,7 +69,7 @@ private:
 	int m_fallingPieceRot;
 	int m_fallingPieceIdx;
 
-	int m_bag[7];
+	int m_bags[2][7];
 	int m_bagIdx;
 
 	int m_heldPiece;

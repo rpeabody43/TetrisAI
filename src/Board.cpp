@@ -13,15 +13,17 @@ Board::Board(int fallRate)
 	, m_fallingPieceRot(0)
 	, m_fallingPieceIdx(3)
 	, m_board()
-	, m_bag()
+	, m_bags()
 	, m_bagIdx(7)
 	, m_heldPiece(0)
 	, m_alreadyHeld(false)
 {
 	m_fallRate = fallRate;
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < sizeof(m_bags) / (sizeof(int) * 7); i++)
 	{
-		m_bag[i] = i + 1;
+		for (int j = 0; j < 7; j++)
+			m_bags[i][j] = j + 1;
+		std::random_shuffle(std::begin(m_bags[i]), std::end(m_bags[i]));
 	}
 }
 
@@ -37,30 +39,32 @@ int Board::GetPieceMap(int piece, int rot, int idx)
 	return ret;
 }
 
-int Board::NextPiece(int delta)
+int Board::NthPiece(int delta)
 {
 	int idx = m_bagIdx + delta;
-	if (idx >= 7)
-	{
-		// 
-		std::random_shuffle(std::begin(m_bag), std::end(m_bag));
-		m_bagIdx = 0;
-	}
+	if (idx >= sizeof(m_bags) / sizeof(int))
+		idx -= sizeof(m_bags) / sizeof(int);
+	return m_bags[idx / 7][idx % 7];
+}
 
-	return m_bag[m_bagIdx];
+void Board::NextPiece () 
+{
+	// If reached the end of the current piece bag, shuffle it and and move onto the next;
+	if ((m_bagIdx + 1) % 7 == 0)
+	{
+		std::random_shuffle(std::begin(m_bags[m_bagIdx / 7]), std::end(m_bags[m_bagIdx / 7]));
+	}
+	m_bagIdx++;
+	if (m_bagIdx >= sizeof(m_bags) / sizeof(int))
+		m_bagIdx = 0;
 }
 
 void Board::NewPiece()
 {
-	if (m_bagIdx >= 7)
-	{
-		std::random_shuffle(std::begin(m_bag), std::end(m_bag));
-		m_bagIdx = 0;
-	}
-
-	int piece = NextPiece(0);
+	int piece = NthPiece(0);
 	NewPiece(piece);
 }
+
 
 void Board::NewPiece(int piece)
 {
@@ -68,7 +72,7 @@ void Board::NewPiece(int piece)
 	m_fallingPieceIdx = 3; // Point the piece starts drawing from
 	m_fallingPieceRot = 0;
 
-	m_bagIdx++;
+	NextPiece();
 
 	int start = m_fallingPieceIdx;
 	for (int i = 3; i >= 0; i--)
