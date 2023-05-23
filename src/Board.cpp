@@ -344,3 +344,8 @@ int Board::GetHeldPiece()
 {
 	return m_heldPiece;
 }
+
+bool Board::GameOver()
+{
+	return m_gameover;
+}

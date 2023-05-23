@@ -35,12 +35,13 @@ public:
 	int FallingPieceAnchor();
 	int GetHeldPiece();
 
+	bool GameOver();
+
 	static int Row(int idx);
 	static int Col(int idx);
 
 private:
 	void HoldPiece();
-	void RandomizeBag();
 	void NextPiece();
 	void NewPiece();
 	void NewPiece(int piece);

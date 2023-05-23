@@ -29,7 +29,8 @@ App::App(unsigned int screenW, unsigned int screenH)
 	: m_pBoard(nullptr)
 	, m_pRenderer(nullptr)
 	, m_pWindow(nullptr)
-	, m_pFont(nullptr)
+	, m_pFont28(nullptr)
+	, m_pFont40(nullptr)
 {
 	m_screenW = screenW;
 	m_screenH = screenH;
@@ -68,7 +69,8 @@ bool App::Init()
 
 	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_SOFTWARE);
 	
-	m_pFont = TTF_OpenFont("Retro Gaming.ttf", 28);
+	m_pFont28 = TTF_OpenFont("Retro Gaming.ttf", 28);
+	m_pFont40 = TTF_OpenFont("Retro Gaming.ttf", 40);
 
 #ifdef __unix__
 	if (!UnixScaling())
@@ -136,7 +138,7 @@ void App::Draw()
 		boardScreenH+2
 	};
 
-	SDL_SetRenderDrawColor(m_pRenderer, 18, 18, 18, SDL_ALPHA_OPAQUE);
+	SDL_SetRenderDrawColor(m_pRenderer, 18, 18, 18, 255);
 	SDL_RenderClear(m_pRenderer);
 
 	SDL_SetRenderDrawColor(m_pRenderer, 93, 93, 93, 255);
@@ -176,7 +178,7 @@ void App::Draw()
 		const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
 		const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
 		DrawPiece(heldPieceOffsetX, heldPieceOffsetY, heldPiece, squareSize);
-		DrawTxt(heldPieceOffsetX + 2 * squareSize, heldPieceOffsetY - squareSize, "HOLD", txtColor);
+		DrawTxt(heldPieceOffsetX + 2 * squareSize, heldPieceOffsetY - squareSize, "HOLD", m_pFont28, txtColor);
 	}
 
 	const int upNextOffsetX = boardOffsetX + boardScreenW + 2 * squareSize;
@@ -185,8 +187,24 @@ void App::Draw()
 	{
 		DrawPiece(upNextOffsetX, upNextOffsetY + 3*i*squareSize, m_pBoard->NthPiece(i), squareSize);
 	}
-	DrawTxt(upNextOffsetX + 2 * squareSize, upNextOffsetY - squareSize, "UP NEXT", txtColor);
+	DrawTxt(upNextOffsetX + 2 * squareSize, upNextOffsetY - squareSize, "UP NEXT", m_pFont28, txtColor);
 
+	if (m_pBoard->GameOver())
+	{
+		/*
+		boardOutline = 
+		{
+			boardOffsetX,
+			boardOffsetY,
+			boardScreenW,
+			boardScreenH
+		};
+		*/
+		SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 150);
+		SDL_RenderFillRect(m_pRenderer, &boardOutline);
+		SDL_Color gameOverTxtColor = { 217, 59, 59 };
+		DrawTxt(boardOffsetX + boardScreenW / 2, boardOffsetY + boardScreenH / 2, "GAME OVER", m_pFont40, gameOverTxtColor);
+	}
 	
 	/*int anchor = m_pBoard->FallingPieceAnchor();
 	int x = (anchor % 10)*squareSize + boardOffsetX;
@@ -208,16 +226,17 @@ void App::Draw()
 
 void App::DrawPiece(int x, int y, int piece, int sqSize)
 {
-	if (piece - 1 != 0 && piece - 1 != 3)
+	if (piece != TetrominoData::i && piece != TetrominoData::o)
 		x += sqSize / 2;
-	if (piece - 1 == 0)
-		y -= sqSize;
+	if (piece == TetrominoData::i)
+		y -= sqSize / 2;
+
 	for (int i = 0; i < 4; i++)
 	{
 		int delta = m_pBoard->GetPieceMap(piece, 0, i);
 		int r = Board::Row(delta);
 		int c = Board::Col(delta);
-		SDL_Rect heldPieceSq = {
+		SDL_Rect pieceSq = {
 			x + c * sqSize,
 			y + r * sqSize,
 			sqSize,
@@ -227,19 +246,19 @@ void App::DrawPiece(int x, int y, int piece, int sqSize)
 		int hex = TetrominoData::hexCodes[piece - 1];
 		SDL_Color color = ConvertHex(hex);
 		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
-		SDL_RenderFillRect(m_pRenderer, &heldPieceSq);
+		SDL_RenderFillRect(m_pRenderer, &pieceSq);
 	}
 }
 
-void App::DrawTxt(int x, int y, const char* txt, SDL_Color color) 
+void App::DrawTxt(int x, int y, const char* txt, TTF_Font* font, SDL_Color color) 
 {
-	if (m_pFont == NULL)
+	if (font == NULL)
 	{
 		std::cout << "Failed to load font" << std::endl;
 		std::cout << "SDL_TTF ERR: " << TTF_GetError() << std::endl;
 		return;
 	}
-	SDL_Surface* textSurface = TTF_RenderText_Solid(m_pFont, txt, color);
+	SDL_Surface* textSurface = TTF_RenderText_Solid(font, txt, color);
 	if (textSurface == NULL) 
 	{
 		std::cout << "Failed to initialize text surface" << std::endl;
@@ -303,7 +322,8 @@ void App::Run()
 	KeyHandler rotClockwise		 = { SDL_SCANCODE_UP	, 75, 75, 0, 0 };
 	KeyHandler rotCountClockwise = { SDL_SCANCODE_Z		, 75, 75, 0, 0 };
 
- 
+	SDL_SetRenderDrawBlendMode(m_pRenderer, SDL_BLENDMODE_BLEND);
+
 	bool end = false;
 	while (!end)
 	{
@@ -349,7 +369,8 @@ void App::ShutDown()
 
 	SDL_DestroyRenderer(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
-	TTF_CloseFont(m_pFont);
+	TTF_CloseFont(m_pFont28);
+	TTF_CloseFont(m_pFont40);
 
 	TTF_Quit();
 	SDL_Quit();
