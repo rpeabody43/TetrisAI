@@ -29,13 +29,7 @@ Board::Board(int fallRate)
 
 int Board::GetPieceMap(int rot, int idx)
 {
-	int ret = TetrominoData::maps[m_fallingPiece - 1][rot][idx];
-	return ret;
-}
-
-int Board::GetPieceMap(int piece, int rot, int idx)
-{
-	int ret = TetrominoData::maps[piece - 1][rot][idx];
+	int ret = TetrominoData::GetPieceMap(m_fallingPiece, rot, idx);
 	return ret;
 }
 
@@ -175,12 +169,28 @@ void Board::Fall()
 	UpdateFallingPiece(0, 10);
 }
 
-void Board::HardDrop()
+int Board::GetFallingPiece()
+{
+	return m_fallingPiece;
+}
+
+int Board::GetFallingPieceRot()
+{
+	return m_fallingPieceRot;
+}
+
+int Board::GetGhost()
 {
 	int delta = 0;
-	while (ValidMove(0, delta+10))
+	while (ValidMove(0, delta + 10))
 		delta += 10;
-	MovePiece(0, delta, true);
+	return m_fallingPieceIdx + delta;
+}
+
+void Board::HardDrop()
+{
+	int ghost = GetGhost() - m_fallingPieceIdx;
+	MovePiece(0, ghost, true);
 	ClearLines();
 	NewPiece();
 }

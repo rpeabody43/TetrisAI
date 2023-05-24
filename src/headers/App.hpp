@@ -21,7 +21,8 @@ public:
 private:
 	bool UnixScaling();
 	void Draw();
-	void DrawPiece(int x, int y, int piece, int sqSize);
+	void DrawPiece(int x, int y, int piece, int rot, int sqSize);
+	void DrawGhostPiece(int boardPos, int xOffset, int yOffset, int piece, int rot, int sqSize);
 	void DrawTxt(int x, int y, const char* txt, TTF_Font* font, SDL_Color color);
 
 	unsigned int m_screenW;
@@ -32,4 +33,6 @@ private:
 	SDL_Window* m_pWindow;
 	TTF_Font* m_pFont28;
 	TTF_Font* m_pFont40;
+
+	int m_boardOffsetX, m_boardOffsetY;
 };

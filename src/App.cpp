@@ -144,6 +144,19 @@ void App::Draw()
 	SDL_SetRenderDrawColor(m_pRenderer, 93, 93, 93, 255);
 	SDL_RenderDrawRect(m_pRenderer, &boardOutline);
 
+	// Drawing ghost
+	int ghostIdx = m_pBoard->GetGhost();
+	DrawGhostPiece
+	(
+		ghostIdx,
+		boardOffsetX,
+		boardOffsetY,
+		m_pBoard->GetFallingPiece(),
+		m_pBoard->GetFallingPieceRot(),
+		squareSize
+	);
+
+
 	for (int y = 0; y < m_pBoard->HEIGHT; y++)
 	{
 		int absy = y * squareSize + boardOffsetY;
@@ -177,7 +190,7 @@ void App::Draw()
 	{
 		const int heldPieceOffsetX = boardOffsetX - 6 * squareSize;
 		const int heldPieceOffsetY = boardOffsetY + 2 * squareSize;
-		DrawPiece(heldPieceOffsetX, heldPieceOffsetY, heldPiece, squareSize);
+		DrawPiece(heldPieceOffsetX, heldPieceOffsetY, heldPiece, 0, squareSize);
 		DrawTxt(heldPieceOffsetX + 2 * squareSize, heldPieceOffsetY - squareSize, "HOLD", m_pFont28, txtColor);
 	}
 
@@ -185,7 +198,7 @@ void App::Draw()
 	const int upNextOffsetY = boardOffsetY + 2 * squareSize;
 	for (int i = 0; i < 3; i++) 
 	{
-		DrawPiece(upNextOffsetX, upNextOffsetY + 3*i*squareSize, m_pBoard->NthPiece(i), squareSize);
+		DrawPiece(upNextOffsetX, upNextOffsetY + 3*i*squareSize, m_pBoard->NthPiece(i), 0, squareSize);
 	}
 	DrawTxt(upNextOffsetX + 2 * squareSize, upNextOffsetY - squareSize, "UP NEXT", m_pFont28, txtColor);
 
@@ -203,7 +216,8 @@ void App::Draw()
 		SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 0, 150);
 		SDL_RenderFillRect(m_pRenderer, &boardOutline);
 		SDL_Color gameOverTxtColor = { 217, 59, 59 };
-		DrawTxt(boardOffsetX + boardScreenW / 2, boardOffsetY + boardScreenH / 2, "GAME OVER", m_pFont40, gameOverTxtColor);
+		DrawTxt(boardOffsetX + boardScreenW / 2, boardOffsetY + boardScreenH / 2 - 20, "GAME OVER", m_pFont40, gameOverTxtColor);
+		DrawTxt(boardOffsetX + boardScreenW / 2, boardOffsetY + boardScreenH / 2 + 20, "Press R to Restart", m_pFont28, gameOverTxtColor);
 	}
 	
 	/*int anchor = m_pBoard->FallingPieceAnchor();
@@ -224,7 +238,7 @@ void App::Draw()
 	SDL_RenderPresent(m_pRenderer);
 }
 
-void App::DrawPiece(int x, int y, int piece, int sqSize)
+void App::DrawPiece(int x, int y, int piece, int rot, int sqSize)
 {
 	if (piece != TetrominoData::i && piece != TetrominoData::o)
 		x += sqSize / 2;
@@ -233,7 +247,7 @@ void App::DrawPiece(int x, int y, int piece, int sqSize)
 
 	for (int i = 0; i < 4; i++)
 	{
-		int delta = m_pBoard->GetPieceMap(piece, 0, i);
+		int delta = TetrominoData::GetPieceMap(piece, rot, i);
 		int r = Board::Row(delta);
 		int c = Board::Col(delta);
 		SDL_Rect pieceSq = {
@@ -245,6 +259,28 @@ void App::DrawPiece(int x, int y, int piece, int sqSize)
 
 		int hex = TetrominoData::hexCodes[piece - 1];
 		SDL_Color color = ConvertHex(hex);
+		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
+		SDL_RenderFillRect(m_pRenderer, &pieceSq);
+	}
+}
+
+void App::DrawGhostPiece(int boardPos, int xOffset, int yOffset, int piece, int rot, int sqSize)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		int delta = TetrominoData::GetPieceMap(piece, rot, i);
+		int c = Board::Col(boardPos + delta);
+		int r = Board::Row(boardPos + delta);
+		SDL_Rect pieceSq = {
+			c * sqSize + xOffset,
+			r * sqSize + yOffset,
+			sqSize,
+			sqSize
+		};
+
+		int hex = TetrominoData::hexCodes[piece - 1];
+		SDL_Color color = ConvertHex(hex);
+		color.a = 75;
 		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
 		SDL_RenderFillRect(m_pRenderer, &pieceSq);
 	}
@@ -271,16 +307,20 @@ void App::DrawTxt(int x, int y, const char* txt, TTF_Font* font, SDL_Color color
 		return;
 	}
 	
-	SDL_Rect src;
-	src.x = 0;
-	src.y = 0;
-	src.w = textSurface->w;
-	src.h = textSurface->h;
-	SDL_Rect dst;
-	dst.x = x - src.w / 2;
-	dst.y = y - src.h / 2;
-	dst.w = src.w;
-	dst.h = src.h;
+	SDL_Rect src = 
+	{
+		0,
+		0,
+		textSurface->w,
+		textSurface->h
+	};
+	SDL_Rect dst =
+	{
+		x - src.w / 2,
+		y - src.h / 2,
+		src.w,
+		src.h
+	};
 
 
 	SDL_RenderCopy(m_pRenderer, textTexture, &src, &dst);
@@ -343,6 +383,11 @@ void App::Run()
 					input.holdPiece = true;
 				if (event.key.keysym.sym == SDLK_SPACE)
 					input.hardDrop = true;
+				if (event.key.keysym.sym == SDLK_r) 
+				{
+					m_pBoard = new Board(250);
+					continue;
+				}
 			}
 		}
 

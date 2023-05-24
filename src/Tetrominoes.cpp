@@ -61,4 +61,10 @@ namespace TetrominoData
 		{0,  1,  -2,  21, -12}, // 3 >> 0
 		{0, -1,   2, -21,  12}  // 0 >> 3
 	};
+
+	int GetPieceMap(int piece, int rot, int idx)
+	{
+		int ret = TetrominoData::maps[piece - 1][rot][idx];
+		return ret;
+	}
 }

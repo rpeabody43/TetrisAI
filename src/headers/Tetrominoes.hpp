@@ -14,4 +14,6 @@ namespace TetrominoData
 	extern const unsigned int hexCodes[7];
 	extern const int wallKicks[8][5];
 	extern const int iWallKicks[8][5];
+
+	int GetPieceMap(int piece, int rot, int idx);
 }

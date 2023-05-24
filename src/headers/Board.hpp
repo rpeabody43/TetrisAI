@@ -26,7 +26,6 @@ public:
 	int GetSquare(int x, int y);
 
 	int GetPieceMap(int rot, int idx);
-	int GetPieceMap(int piece, int rot, int idx);
 
 	int NthPiece(int delta);
 	
@@ -34,6 +33,9 @@ public:
 
 	int FallingPieceAnchor();
 	int GetHeldPiece();
+	int GetFallingPiece();
+	int GetFallingPieceRot();
+	int GetGhost();
 
 	bool GameOver();
 
@@ -47,7 +49,6 @@ private:
 	void NewPiece(int piece);
 	void Fall();
 	void HardDrop();
-
 
 	bool ValidMove(int rotDelta, int moveDelta);
 	void MovePiece(int rotDelta, int moveDelta, bool freeze);
