@@ -385,6 +385,7 @@ void App::Run()
 					input.hardDrop = true;
 				if (event.key.keysym.sym == SDLK_r) 
 				{
+					delete m_pBoard;
 					m_pBoard = new Board(250);
 					continue;
 				}
