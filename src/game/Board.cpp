@@ -1,7 +1,7 @@
 #include <algorithm> // For randomization
 
-#include "headers/tetrominoes.hpp"
-#include "headers/Board.hpp"
+#include "tetrominoes.hpp"
+#include "Board.h"
 
 Board::Board(int fallRate)
 	: m_gameover(false)
@@ -274,19 +274,19 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 	if (m_fallingPiece == TetrominoData::O || rotDelta == 0) // O pieces should not be rotated / wall kicked at all
 		i = 5; // Easy way to fail the condition below and leave it as is
 	else if (m_fallingPiece == TetrominoData::I) // The I piece has a different table of wall kicks per SRS
-		while (i < 5 && !ValidMove(rotDelta, TetrominoData::iWallKicks[wallKickTable][i]))
+		while (i < 5 && !ValidMove(rotDelta, TetrominoData::I_WALL_KICKS[wallKickTable][i]))
 			i++;
 	else
-		while (i < 5 && !ValidMove(rotDelta, TetrominoData::wallKicks[wallKickTable][i]))
+		while (i < 5 && !ValidMove(rotDelta, TetrominoData::WALL_KICKS[wallKickTable][i]))
 			i++;
 
 	if (i != 5)
 	{
 		int wallKick;
 		if (m_fallingPiece == TetrominoData::I)
-			wallKick = TetrominoData::iWallKicks[wallKickTable][i];
+			wallKick = TetrominoData::I_WALL_KICKS[wallKickTable][i];
 		else
-			wallKick = TetrominoData::wallKicks[wallKickTable][i];
+			wallKick = TetrominoData::WALL_KICKS[wallKickTable][i];
 		MovePiece(rotDelta, wallKick, false);
 	}
 }

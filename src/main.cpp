@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 
-#include "headers/App.hpp"
+#include "gfx/App.h"
 
 int main(int argc, char* argv[])
 {

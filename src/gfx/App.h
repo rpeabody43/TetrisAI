@@ -5,7 +5,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-#include "Board.hpp"
+#include "../game/Board.h"
 
 
 class App

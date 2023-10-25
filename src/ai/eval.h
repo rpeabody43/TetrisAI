@@ -1,5 +1,5 @@
-#include "Board.hpp"
-#include "tetrominoes.hpp"
+#include "../game/Board.h"
+#include "../game/tetrominoes.hpp"
 
 struct Move {
     int position;

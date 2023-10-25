@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Tetrominoes.hpp"
+#include "tetrominoes.hpp"
 
 struct Input {
 	bool moveLeft;

@@ -12,10 +12,10 @@
 
 #endif
 
-#include "headers/App.hpp"
-#include "headers/Board.hpp"
-#include "headers/tetrominoes.hpp"
-#include "headers/ai.hpp"
+#include "App.h"
+#include "../game/Board.h"
+#include "../game/tetrominoes.hpp"
+#include "../ai/eval.h"
 
 
 struct KeyHandler {
@@ -178,7 +178,7 @@ void App::Draw()
 				squareSize
 			};
 
-			int hex = TetrominoData::hexCodes[abs(sq) - 1];
+			int hex = TetrominoData::HEX_CODES[abs(sq) - 1];
 			SDL_Color color = ConvertHex(hex);
 			SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
 			SDL_RenderFillRect(m_pRenderer, &sqRect);
@@ -260,7 +260,7 @@ void App::DrawPiece(int x, int y, int piece, int rot, int sqSize)
 			sqSize
 		};
 
-		int hex = TetrominoData::hexCodes[piece - 1];
+		int hex = TetrominoData::HEX_CODES[piece - 1];
 		SDL_Color color = ConvertHex(hex);
 		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
 		SDL_RenderFillRect(m_pRenderer, &pieceSq);
@@ -281,7 +281,7 @@ void App::DrawGhostPiece(int boardPos, int xOffset, int yOffset, int piece, int 
 			sqSize
 		};
 
-		int hex = TetrominoData::hexCodes[piece - 1];
+		int hex = TetrominoData::HEX_CODES[piece - 1];
 		SDL_Color color = ConvertHex(hex);
 		color.a = 75;
 		SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);

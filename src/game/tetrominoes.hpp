@@ -1,8 +1,16 @@
-#include "headers/Tetrominoes.hpp"
+#pragma once
 
-namespace TetrominoData
+namespace TetrominoData 
 {
-	const int maps[7][4][4] =
+	const int I = 1;
+	const int J = 2;
+	const int L = 3;
+	const int O = 4;
+	const int S = 5;
+	const int Z = 6;
+	const int T = 7;
+
+	const int MAPS[7][4][4] =
 	{
 		{ // I
 			{10, 11, 12, 13}, { 2, 12, 22, 32}, {20, 21, 22, 23}, { 1, 11, 21, 31}
@@ -27,7 +35,7 @@ namespace TetrominoData
 		},
 	};
 
-	const unsigned int hexCodes[7] =
+	const unsigned int HEX_CODES[7] =
 	{
 		0x00C2DEFF, // I
 		0x00418DFF, // J
@@ -38,7 +46,7 @@ namespace TetrominoData
 		0x5F2879FF  // A
 	};
 
-	const int wallKicks[8][5] =
+	const int WALL_KICKS[8][5] =
 	{
 		{0, -1, -11,  20,  19}, // 0 >> 1
 		{0,  1,  11, -20, -19}, // 1 >> 0
@@ -50,7 +58,7 @@ namespace TetrominoData
 		{0,  1,  -9,  20,  21}  // 0 >> 3
 	};
 
-	const int iWallKicks[8][5] =
+	const int I_WALL_KICKS[8][5] =
 	{
 		{0, -2,   1,   8, -19}, // 0 >> 1
 		{0,  2,  -1,  -8,  19}, // 1 >> 0
@@ -62,9 +70,9 @@ namespace TetrominoData
 		{0, -1,   2, -21,  12}  // 0 >> 3
 	};
 
-	int GetPieceMap(int piece, int rot, int idx)
+	inline int GetPieceMap(int piece, int rot, int idx)
 	{
-		int ret = maps[piece - 1][rot][idx];
+		int ret = MAPS[piece - 1][rot][idx];
 		return ret;
 	}
 }

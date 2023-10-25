@@ -1,8 +1,9 @@
 #include <cmath>
 #include <vector>
 
-#include "headers/ai.hpp"
-#include "headers/tetrominoes.hpp"
+#include "eval.h"
+#include "../game/Board.h"
+#include "../game/tetrominoes.hpp"
 
 struct BoardAnalysis {
     int holesCount;

@@ -13,7 +13,7 @@ find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 
 # Add source to this project's executable.
-set(SOURCES src/main.cpp src/Board.cpp src/tetrominoes.cpp src/App.cpp src/ai.cpp)
+set(SOURCES src/main.cpp "src/game/Board.cpp"  "src/gfx/App.cpp" "src/ai/eval.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/headers)
 
