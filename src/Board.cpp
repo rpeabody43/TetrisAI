@@ -1,9 +1,7 @@
-#include <iostream>
 #include <algorithm> // For randomization
 
-#include "headers/Tetrominoes.hpp"
+#include "headers/tetrominoes.hpp"
 #include "headers/Board.hpp"
-
 
 Board::Board(int fallRate)
 	: m_gameover(false)
@@ -17,6 +15,7 @@ Board::Board(int fallRate)
 	, m_bagIdx(7)
 	, m_heldPiece(0)
 	, m_alreadyHeld(false)
+	, m_currentHighest(Board::HEIGHT) 
 {
 	m_fallRate = fallRate;
 	for (int i = 0; i < sizeof(m_bags) / (sizeof(int) * 7); i++)
@@ -63,21 +62,30 @@ void Board::NewPiece()
 void Board::NewPiece(int piece)
 {
 	m_fallingPiece = piece;
-	m_fallingPieceIdx = 3; // Point the piece starts drawing from
+    // Point the piece starts drawing from
+	if (m_currentHighest <= VANISH_ZONE_HEIGHT + 1)
+		m_fallingPieceIdx = 3; 
+	else
+        m_fallingPieceIdx = IdxConvert(3, VANISH_ZONE_HEIGHT);
 	m_fallingPieceRot = 0;
 
 	NextPiece();
 
 	int start = m_fallingPieceIdx;
+	// Pieces spawn on top of other pieces
+	bool blockOut = false;
 	for (int i = 3; i >= 0; i--)
 	{
 		int newIdx = start + GetPieceMap(m_fallingPieceRot, i);
+
 		if (m_board[newIdx] == 0)
 		{
 			m_board[newIdx] = -m_fallingPiece;
 		}
-		else m_gameover = true;
+		else blockOut = true;
 	}
+
+	//m_gameover = blockOut;
 }
 
 void Board::HoldPiece()
@@ -146,6 +154,7 @@ void Board::ClearLines()
 		m_board[buffer] = 0;
 	}
 
+	m_currentHighest += linesCleared;
 }
 
 void Board::Fall()
@@ -233,12 +242,24 @@ void Board::MovePiece(int rotDelta, int moveDelta, bool freeze)
 		m_board[absidxNew] = freeze ? m_fallingPiece : -m_fallingPiece;
 	}
 
-	// The held piece becomes available when the current falling piece is locked
-	if (freeze)
-		m_alreadyHeld = false;
-
 	m_fallingPieceRot += rotDelta;
 	m_fallingPieceIdx += moveDelta;
+
+	if (freeze)
+	{
+	    // The held piece becomes available when the current falling piece is locked
+		m_alreadyHeld = false;
+
+        // We use > because y is from top down
+        if (m_currentHighest > Row(m_fallingPieceIdx))
+                m_currentHighest = Row(m_fallingPieceIdx);
+
+		// Lock out
+		if (m_fallingPieceIdx + GetPieceMap(m_fallingPieceRot, 3) < IdxConvert(0, VANISH_ZONE_HEIGHT))
+		{
+			m_gameover = true;
+		}
+	}
 }
 
 void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
@@ -250,9 +271,9 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 	// Loop through the wallkicks at this rotation until one works or they all fail
 	int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
 	int i = 0;
-	if (m_fallingPiece == TetrominoData::o || rotDelta == 0) // O pieces should not be rotated / wall kicked at all
+	if (m_fallingPiece == TetrominoData::O || rotDelta == 0) // O pieces should not be rotated / wall kicked at all
 		i = 5; // Easy way to fail the condition below and leave it as is
-	else if (m_fallingPiece == TetrominoData::i) // The I piece has a different table of wall kicks per SRS
+	else if (m_fallingPiece == TetrominoData::I) // The I piece has a different table of wall kicks per SRS
 		while (i < 5 && !ValidMove(rotDelta, TetrominoData::iWallKicks[wallKickTable][i]))
 			i++;
 	else
@@ -262,7 +283,7 @@ void Board::UpdateFallingPiece(int rotDelta, int moveDelta)
 	if (i != 5)
 	{
 		int wallKick;
-		if (m_fallingPiece == TetrominoData::i)
+		if (m_fallingPiece == TetrominoData::I)
 			wallKick = TetrominoData::iWallKicks[wallKickTable][i];
 		else
 			wallKick = TetrominoData::wallKicks[wallKickTable][i];
@@ -353,6 +374,11 @@ int Board::Col(int idx)
 int Board::GetHeldPiece()
 {
 	return m_heldPiece;
+}
+
+int Board::GetHighestPoint()
+{
+	return m_currentHighest;
 }
 
 bool Board::GameOver()

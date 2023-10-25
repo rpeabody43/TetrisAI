@@ -5,13 +5,15 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("TetrisAI")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
 # Add SDL Main Library
 find_package(SDL2 REQUIRED)
 # Add SDL Text Library
 find_package(SDL2_ttf REQUIRED)
 
 # Add source to this project's executable.
-set(SOURCES src/main.cpp src/Board.cpp src/Tetrominoes.cpp src/App.cpp)
+set(SOURCES src/main.cpp src/Board.cpp src/tetrominoes.cpp src/App.cpp src/ai.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/headers)
 

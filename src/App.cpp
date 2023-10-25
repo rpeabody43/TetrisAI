@@ -14,7 +14,8 @@
 
 #include "headers/App.hpp"
 #include "headers/Board.hpp"
-#include "headers/Tetrominoes.hpp"
+#include "headers/tetrominoes.hpp"
+#include "headers/ai.hpp"
 
 
 struct KeyHandler {
@@ -121,10 +122,10 @@ static SDL_Color ConvertHex (int hex)
 void App::Draw()
 {
 	//int startTime = SDL_GetTicks();
-	static int squareSize = 50;
+	static int squareSize = 45;
 
 	static int boardScreenW = m_pBoard->WIDTH * squareSize;
-	static int boardScreenH = m_pBoard->HEIGHT * squareSize;
+	static int boardScreenH = m_pBoard->VISIBLE_HEIGHT * squareSize;
 
 	static int boardOffsetX = (m_screenW - boardScreenW) / 2;
 	static int boardOffsetY = (m_screenH - boardScreenH) / 2;
@@ -146,6 +147,7 @@ void App::Draw()
 
 	// Drawing ghost
 	int ghostIdx = m_pBoard->GetGhost();
+	ghostIdx -= Board::VANISH_ZONE_HEIGHT * Board::WIDTH;
 	DrawGhostPiece
 	(
 		ghostIdx,
@@ -157,15 +159,15 @@ void App::Draw()
 	);
 
 
-	for (int y = 0; y < m_pBoard->HEIGHT; y++)
+	for (int y = 0; y < Board::VISIBLE_HEIGHT; y++)
 	{
 		int absy = y * squareSize + boardOffsetY;
 
-		for (int x = 0; x < m_pBoard->WIDTH; x++)
+		for (int x = 0; x < Board::WIDTH; x++)
 		{
 			int absx = x * squareSize + boardOffsetX;
 
-			int sq = m_pBoard->GetSquare(x, y);
+			int sq = m_pBoard->GetSquare(x, y+Board::VANISH_ZONE_HEIGHT);
 			if (sq == 0) continue;
 
 			SDL_Rect sqRect =
@@ -235,14 +237,15 @@ void App::Draw()
 	SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
 	SDL_RenderFillRect(m_pRenderer, &anchorSq);*/
 
+
 	SDL_RenderPresent(m_pRenderer);
 }
 
 void App::DrawPiece(int x, int y, int piece, int rot, int sqSize)
 {
-	if (piece != TetrominoData::i && piece != TetrominoData::o)
+	if (piece != TetrominoData::I && piece != TetrominoData::O)
 		x += sqSize / 2;
-	if (piece == TetrominoData::i)
+	if (piece == TetrominoData::I)
 		y -= sqSize / 2;
 
 	for (int i = 0; i < 4; i++)

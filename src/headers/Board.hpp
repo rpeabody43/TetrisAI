@@ -16,13 +16,16 @@ class Board
 {
 public:
 	static const int WIDTH = 10;
-	static const int HEIGHT = 18;
+	static const int HEIGHT = 24;
+	static const int VISIBLE_HEIGHT = 20;
+	static const int VANISH_ZONE_HEIGHT = HEIGHT - VISIBLE_HEIGHT;
+    static const int TOTAL_SIZE = WIDTH * HEIGHT;
 
 	Board(int fallRate);
 
 	void Update(Input& inputs, unsigned int ticks);
 
-	int IdxConvert(int x, int y);
+	static int IdxConvert(int x, int y);
 	int GetSquare(int x, int y);
 
 	int GetPieceMap(int rot, int idx);
@@ -36,6 +39,7 @@ public:
 	int GetFallingPiece();
 	int GetFallingPieceRot();
 	int GetGhost();
+    int GetHighestPoint();
 
 	bool GameOver();
 
@@ -63,9 +67,9 @@ private:
 
 	unsigned int m_ticks;
 	unsigned int m_lastTicks;
-	int m_fallRate;
+	unsigned int m_fallRate;
 
-	int m_board[180];
+	int m_board[TOTAL_SIZE];
 
 	int m_fallingPiece;
 	int m_fallingPieceRot;
@@ -76,4 +80,6 @@ private:
 
 	int m_heldPiece;
 	bool m_alreadyHeld;
+
+	int m_currentHighest;
 };

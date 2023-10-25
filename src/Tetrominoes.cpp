@@ -64,7 +64,7 @@ namespace TetrominoData
 
 	int GetPieceMap(int piece, int rot, int idx)
 	{
-		int ret = TetrominoData::maps[piece - 1][rot][idx];
+		int ret = maps[piece - 1][rot][idx];
 		return ret;
 	}
 }
