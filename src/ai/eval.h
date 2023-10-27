@@ -1,7 +1,7 @@
 #include "../game/Board.h"
-#include "../game/tetrominoes.hpp"
 
-struct Move {
+struct Move
+{
     int position;
     int rotation;
     bool hold;

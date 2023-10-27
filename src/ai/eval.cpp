@@ -1,18 +1,20 @@
 #include <cmath>
 #include <vector>
+#include <cfloat>
 
 #include "eval.h"
 #include "../game/Board.h"
-#include "../game/tetrominoes.hpp"
 
-struct BoardAnalysis {
+struct BoardAnalysis
+{
     int holesCount;
     int aggregateHeight;
     int completeLines;
-    int heightStdDev;
+    double heightStdDev;
 };
 
-double GetHeightStdDev(int highestPoints[Board::WIDTH]) {
+double GetHeightStdDev(const int highestPoints[Board::WIDTH])
+{
     int sum = 0;
     for (int i = 0; i < Board::WIDTH; i++) {
         sum += highestPoints[i];
@@ -28,13 +30,13 @@ double GetHeightStdDev(int highestPoints[Board::WIDTH]) {
 }
 
 /*
-* Eval parameters:
-* Number of Holes (Bad)
-* Bumpiness (Bad)
-* Aggregate Height (Bad)
-*	Sum of all the placed blocks
-* Complete Lines (Good)
-*/
+ * Eval parameters:
+ * Number of Holes (Bad)
+ * Bumpiness (Bad)
+ * Aggregate Height (Bad)
+ *   Sum of all the placed blocks
+ * Complete Lines (Good)
+ */
 BoardAnalysis AnalyzeBoard(Board* currentBoard, int highestPoint, int piece, int pieceRot, int pieceIdx)
 {
     int pieceSquares[4] = {};
@@ -85,12 +87,14 @@ BoardAnalysis AnalyzeBoard(Board* currentBoard, int highestPoint, int piece, int
 std::vector<Move> GenerateMoves(Board* currentBoard, int currentPiece, int heldPiece)
 {
     std::vector<Move> moveList;
+
+
+
     return moveList;
 }
 
 Move BestMove(Board* currentBoard, int currentPiece, int heldPiece, int highestPoint)
 {
-    BoardAnalysis analysis = AnalyzeBoard(currentBoard, highestPoint, currentPiece, 0, 5);
     struct Weights
     {
         double holesCount;

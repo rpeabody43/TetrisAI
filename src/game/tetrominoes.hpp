@@ -2,14 +2,19 @@
 
 namespace TetrominoData 
 {
-	const int I = 1;
-	const int J = 2;
-	const int L = 3;
-	const int O = 4;
-	const int S = 5;
-	const int Z = 6;
-	const int T = 7;
+    enum
+    {
+        I = 1,
+        J = 2,
+        L = 3,
+        O = 4,
+        S = 5,
+        Z = 6,
+        T = 7,
+    };
 
+	// Piece maps, where to place squares relative to a piece's anchor.
+    // 
 	const int MAPS[7][4][4] =
 	{
 		{ // I
@@ -35,6 +40,17 @@ namespace TetrominoData
 		},
 	};
 
+    struct Bounds
+    {
+        int leftBound;
+        int rightBound;
+    };
+    Bounds PIECE_BOUNDS[7] =
+    {
+        {}
+    };
+
+	// Piece color hex codes
 	const unsigned int HEX_CODES[7] =
 	{
 		0x00C2DEFF, // I
@@ -46,6 +62,8 @@ namespace TetrominoData
 		0x5F2879FF  // A
 	};
 
+	// Wall kicks for pieces that are not I or O
+    // https://tetris.fandom.com/wiki/SRS
 	const int WALL_KICKS[8][5] =
 	{
 		{0, -1, -11,  20,  19}, // 0 >> 1
@@ -58,6 +76,7 @@ namespace TetrominoData
 		{0,  1,  -9,  20,  21}  // 0 >> 3
 	};
 
+	// Wall kicks for the I piece
 	const int I_WALL_KICKS[8][5] =
 	{
 		{0, -2,   1,   8, -19}, // 0 >> 1
@@ -70,9 +89,16 @@ namespace TetrominoData
 		{0, -1,   2, -21,  12}  // 0 >> 3
 	};
 
-	inline int GetPieceMap(int piece, int rot, int idx)
+	/**
+	 * Get the nth square.
+	 * @param piece Which piece to get.
+	 * @param rot What rotation the piece is
+	 * @param n The number square to get
+	 * @return The square position relative to the anchor.
+	 */
+	inline int GetPieceMap(int piece, int rot, int n)
 	{
-		int ret = MAPS[piece - 1][rot][idx];
+		int ret = MAPS[piece - 1][rot][n];
 		return ret;
 	}
 }
