@@ -7,4 +7,4 @@ struct Move
     bool hold;
 };
 
-Move BestMove(Board* currentBoard, int currentPiece, int heldPiece, int highestPoint);
+Move BestMove (Board* currentBoard, int currentPiece, int heldPiece, int highestPoint);

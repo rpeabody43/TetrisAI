@@ -15,31 +15,31 @@ public:
      * @param screenW The width of the window.
      * @param screenH The height of the window.
      */
-    GameWindow(unsigned int screenW, unsigned int screenH);
+    GameWindow (uint16_t screenW, uint16_t screenH);
 
     /**
      * Initializes the window and the SDL things it depends on.
      * @return True if everything goes well, false otherwise.
      */
-    bool Init();
+    bool Init ();
 
     /**
      * Draw a frame to the screen.
      * @param currentBoard The current game board.
      */
-    void Draw(Board* currentBoard);
+    void Draw (Board* currentBoard);
 
     /**
      * Destructor: safely closes and exits the window..
      */
-    ~GameWindow();
+    ~GameWindow ();
 
 private:
     /*
      * Prevent the app from scaling on UNIX-based OSs.
      * I HAVE NOT TESTED THIS.
      */
-    bool UnixScaling();
+    bool UnixScaling ();
 
     /**
      * Draw a piece not on the board in a specific spot on the screen.
@@ -50,7 +50,7 @@ private:
      * @param rot What rotation the piece should have.
      * @param sqSize The size of each square in the piece.
      */
-    void DrawPiece(int x, int y, int piece, int rot, int sqSize);
+    void DrawPiece (uint16_t x, uint16_t y, uint8_t piece, uint8_t rot, uint8_t sqSize);
 
     /**
      * Draws the ghost piece (where the piece would land on a hard drop) at the bottom of the screen.
@@ -61,8 +61,8 @@ private:
      * @param rot What rotation the piece should have.
      * @param sqSize The size of each square in the piece
      */
-    void DrawGhostPiece(Board* currentBoard, int xOffset, int yOffset, int piece, int rot, int sqSize);
-	
+    void DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t yOffset, uint8_t piece, uint8_t rot, uint8_t sqSize);
+
     /**
      * Draw some text to the screen.
      * @param x The x position to center the text.
@@ -71,10 +71,10 @@ private:
      * @param font What SDL font to use.
      * @param color What color the text should be.
      */
-    void DrawTxt(int x, int y, const char* txt, TTF_Font* font, SDL_Color color);
+    void DrawTxt (int x, int y, const char* txt, TTF_Font* font, SDL_Color color);
 
-    unsigned int m_screenW;
-    unsigned int m_screenH;
+    uint16_t m_screenW;
+    uint16_t m_screenH;
 
     SDL_Renderer* m_pRenderer;
     SDL_Window* m_pWindow;

@@ -4,73 +4,73 @@
 
 #include "eval.h"
 #include "../game/Board.h"
+#include "../game/tetrominoes.hpp"
 
 struct BoardAnalysis
 {
-    int holesCount;
-    int aggregateHeight;
-    int completeLines;
-    double heightStdDev;
+    int holesCount;         // Open squares with filled squares above
+    int aggregateHeight;    // The total number of filled squares
+    int completeLines;      // Amount of lines to be cleared
+    double heightStdDev;    // Flatter board = better
 };
 
-double GetHeightStdDev(const int highestPoints[Board::WIDTH])
+double GetHeightStdDev (const int highestPoints[Board::WIDTH])
 {
     int sum = 0;
-    for (int i = 0; i < Board::WIDTH; i++) {
+    for (int i = 0; i < Board::WIDTH; i++)
+    {
         sum += highestPoints[i];
     }
 
-    double avg = (double)sum / Board::WIDTH;
+    double avg = (double) sum / Board::WIDTH;
     double standardDev = 0;
-    for (int i = 0; i < Board::WIDTH; i++) {
+    for (int i = 0; i < Board::WIDTH; i++)
+    {
         double dev = highestPoints[i] - avg;
         standardDev += dev * dev;
     }
     return std::sqrt(standardDev) / Board::WIDTH;
 }
 
-/*
- * Eval parameters:
- * Number of Holes (Bad)
- * Bumpiness (Bad)
- * Aggregate Height (Bad)
- *   Sum of all the placed blocks
- * Complete Lines (Good)
- */
-BoardAnalysis AnalyzeBoard(Board* currentBoard, int highestPoint, int piece, int pieceRot, int pieceIdx)
+BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int pieceRot)
 {
     int pieceSquares[4] = {};
     int squareIdx = 0;
     for (int i = 0; i < 4; i++)
     {
-        pieceSquares[i] = pieceIdx + TetrominoData::GetPieceMap(piece, pieceRot, i);
+        pieceSquares[i] = pieceAnchor + TetrominoData::GetPieceMap(piece, pieceRot, i);
     }
 
-    BoardAnalysis vals = { };
+    int highestPoint = currentBoard->GetHighestRow();
+    if (highestPoint > Board::Row(pieceAnchor))
+        highestPoint = Board::Row(pieceAnchor);
+
+    BoardAnalysis vals = {};
     int columnHeights[Board::WIDTH] = {};
+
     for (int y = highestPoint; y < Board::HEIGHT; y++)
     {
         bool lineComplete = true;
         for (int x = 0; x < Board::WIDTH; x++)
         {
             // Consider the square "filled" if there's something there or the current piece fills it
-            bool pieceAtIdx = squareIdx < 4 && pieceSquares[squareIdx] == Board::IdxConvert(x, y);
+            bool pieceAtIdx = squareIdx < 4 && pieceSquares[squareIdx] == Board::ConvertIdx(x, y);
             if (pieceAtIdx)
                 squareIdx++;
 
             bool squareFilled = pieceAtIdx || currentBoard->GetSquare(x, y) > 0;
 
-            bool isHighestPoint = squareFilled && columnHeights[x] == 0;
-            if (isHighestPoint)
+            // Going from top down, so first filled square is the highest
+            if (squareFilled && columnHeights[x] == 0)
                 columnHeights[x] = y;
-
 
             if (squareFilled)
             {
                 vals.aggregateHeight++;
-            } 
-            else 
+            }
+            else
             {
+                // If this isn't the first square in the column and isn't filled
                 if (columnHeights[x] > 0)
                     vals.holesCount++;
                 lineComplete = false;
@@ -84,16 +84,15 @@ BoardAnalysis AnalyzeBoard(Board* currentBoard, int highestPoint, int piece, int
     return vals;
 }
 
-std::vector<Move> GenerateMoves(Board* currentBoard, int currentPiece, int heldPiece)
+std::vector<Move> GenerateMoves (Board* currentBoard, int currentPiece, int heldPiece)
 {
     std::vector<Move> moveList;
-
 
 
     return moveList;
 }
 
-Move BestMove(Board* currentBoard, int currentPiece, int heldPiece, int highestPoint)
+Move BestMove (Board* currentBoard, int currentPiece, int heldPiece)
 {
     struct Weights
     {
@@ -102,16 +101,16 @@ Move BestMove(Board* currentBoard, int currentPiece, int heldPiece, int highestP
         double completeLines;
         double heightStdDev;
     };
-    Weights weights = { -1.0, -1.0, 50.0, -1.0 };
+    Weights weights = {-1.0, -1.0, 50.0, -1.0};
 
     std::vector<Move> moveList = GenerateMoves(currentBoard, currentPiece, heldPiece);
-    Move bestMove = {  };
+    Move bestMove = {};
     double bestScore = -DBL_MAX;
-    
-    for (auto &move : moveList)
+
+    for (auto& move: moveList)
     {
         int piece = move.hold ? heldPiece : currentPiece;
-        BoardAnalysis analysis = AnalyzeBoard(currentBoard, highestPoint, piece, move.position, move.rotation);
+        BoardAnalysis analysis = AnalyzeBoard(currentBoard, move.position, piece, move.rotation);
 
         double score = analysis.holesCount * weights.holesCount +
                        analysis.aggregateHeight * weights.aggregateHeight +
