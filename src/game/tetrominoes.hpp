@@ -16,7 +16,6 @@ namespace TetrominoData
     };
 
     // Piece maps, where to place squares relative to a piece's anchor.
-    // 
     const uint8_t MAPS[7][4][4] =
         {
             { // I
@@ -45,8 +44,8 @@ namespace TetrominoData
     /**
      * Get the nth square.
      * @param piece Which piece to get.
-     * @param rot What rotation the piece is
-     * @param n The number square to get
+     * @param rot What rotation the piece is.
+     * @param n The number square to get.
      * @return The square position relative to the anchor.
      */
     inline uint8_t GetPieceMap (uint8_t piece, uint8_t rot, uint8_t n)
@@ -67,9 +66,15 @@ namespace TetrominoData
         {{-1, 7}, {-1, 7}, {-1, 7}, {-1, 7}}, // O
         {{ 0, 7}, {-1, 7}, { 0, 7}, { 0, 8}}, // S
         {{ 0, 7}, {-1, 7}, { 0, 7}, { 0, 8}}, // Z
-        {{ 0, 7}, {-1, 7}, { 0, 7}, { 0, 8}} // T
+        {{ 0, 7}, {-1, 7}, { 0, 7}, { 0, 8}}  // T
     };
 
+    /**
+     * Get the left-most and right-most position a certain piece with certain rotation can be on the board.
+     * @param piece Which piece to get.
+     * @param rot What rotation the piece is.
+     * @return Bounds, a struct with ints leftBound and rightBound
+     */
     inline Bounds GetPieceBounds (uint8_t piece, uint8_t rot)
     {
         return PIECE_BOUNDS[piece-1][rot];

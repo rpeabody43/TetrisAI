@@ -8,28 +8,28 @@
 
 struct BoardAnalysis
 {
-    int holesCount;         // Open squares with filled squares above
-    int aggregateHeight;    // The total number of filled squares
-    int completeLines;      // Amount of lines to be cleared
-    double heightStdDev;    // Flatter board = better
+    uint8_t holesCount;         // Open squares with filled squares above
+    uint16_t aggregateHeight;   // The total number of filled squares
+    uint8_t completeLines;      // Amount of lines to be cleared
+    double heightStdDev;        // Flatter board = better
 };
 
 double GetHeightStdDev (const int highestPoints[Board::WIDTH])
 {
-    int sum = 0;
-    for (int i = 0; i < Board::WIDTH; i++)
+    int sum = 0, i;
+    double avg, dev, standardDev = 0;
+    for (i = 0; i < Board::WIDTH; i++)
     {
         sum += highestPoints[i];
     }
 
-    double avg = (double) sum / Board::WIDTH;
-    double standardDev = 0;
-    for (int i = 0; i < Board::WIDTH; i++)
+    avg = (double) sum / Board::WIDTH;
+    for (i = 0; i < Board::WIDTH; i++)
     {
-        double dev = highestPoints[i] - avg;
+        dev = highestPoints[i] - avg;
         standardDev += dev * dev;
     }
-    return std::sqrt(standardDev) / Board::WIDTH;
+    return std::sqrt(standardDev / Board::WIDTH);
 }
 
 BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int pieceRot)
@@ -46,7 +46,10 @@ BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int
         highestPoint = Board::Row(pieceAnchor);
 
     BoardAnalysis vals = {};
+
     int columnHeights[Board::WIDTH] = {};
+    // Fiill all heights with the "lowest" square
+    std::fill_n(columnHeights, Board::WIDTH, Board::HEIGHT);
 
     for (int y = highestPoint; y < Board::HEIGHT; y++)
     {
@@ -61,7 +64,7 @@ BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int
             bool squareFilled = pieceAtIdx || currentBoard->GetSquare(x, y) > 0;
 
             // Going from top down, so first filled square is the highest
-            if (squareFilled && columnHeights[x] == 0)
+            if (squareFilled && columnHeights[x] == Board::HEIGHT)
                 columnHeights[x] = y;
 
             if (squareFilled)
@@ -71,7 +74,7 @@ BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int
             else
             {
                 // If this isn't the first square in the column and isn't filled
-                if (columnHeights[x] > 0)
+                if (columnHeights[x] < 24)
                     vals.holesCount++;
                 lineComplete = false;
             }
@@ -84,30 +87,75 @@ BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int
     return vals;
 }
 
-std::vector<Move> GenerateMoves (Board* currentBoard, int currentPiece, int heldPiece)
+bool ValidStart (Board* currentBoard, uint8_t piece, uint16_t anchor, uint8_t rot)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        uint8_t squareIndex = anchor + TetrominoData::GetPieceMap(piece, rot, i);
+        if (currentBoard->GetSquare(squareIndex) > 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<Move> GenerateMoves (Board* currentBoard, uint8_t currentPiece, uint8_t heldPiece)
 {
     std::vector<Move> moveList;
-
+    for (int8_t piece : {currentPiece, heldPiece})
+    {
+        uint8_t numRot;
+        switch (piece)
+        {
+            case TetrominoData::O:
+                numRot = 1;
+                break;
+            case TetrominoData::S:
+            case TetrominoData::Z:
+            case TetrominoData::I:
+                numRot = 2;
+                break;
+            default:
+                numRot = 4;
+                break;
+        }
+        for (int rot = 0; rot < numRot; rot++)
+        {
+            TetrominoData::Bounds pieceBounds = TetrominoData::GetPieceBounds(piece, rot);
+            for (uint8_t startPos = pieceBounds.leftBound + Board::BUFFER_HEIGHT*10; startPos <= pieceBounds.rightBound + Board::BUFFER_HEIGHT*10; startPos++)
+            {
+                if (!ValidStart(currentBoard, piece, startPos, rot))
+                    continue;
+                uint16_t endingPos = currentBoard->GetGhost(piece, startPos, rot);
+                moveList.push_back({
+                    .position = endingPos,
+                    .rotation = rot,
+                    .hold = piece == heldPiece
+                });
+            }
+        }
+        if (currentPiece == heldPiece)
+            break;
+    }
 
     return moveList;
 }
 
-Move BestMove (Board* currentBoard, int currentPiece, int heldPiece)
+Move BestMove (Board* currentBoard, Weights& weights)
 {
-    struct Weights
-    {
-        double holesCount;
-        double aggregateHeight;
-        double completeLines;
-        double heightStdDev;
-    };
-    Weights weights = {-1.0, -1.0, 50.0, -1.0};
+    uint8_t currentPiece = currentBoard->GetFallingPiece();
+    uint8_t heldPiece = currentBoard->GetHeldPiece();
+    // Treat the next piece up as the held piece if nothing is held
+    if (heldPiece == 0)
+        heldPiece = currentBoard->NthPiece(0);
 
     std::vector<Move> moveList = GenerateMoves(currentBoard, currentPiece, heldPiece);
     Move bestMove = {};
     double bestScore = -DBL_MAX;
+    BoardAnalysis bestAnal {};
 
-    for (auto& move: moveList)
+    for (Move& move : moveList)
     {
         int piece = move.hold ? heldPiece : currentPiece;
         BoardAnalysis analysis = AnalyzeBoard(currentBoard, move.position, piece, move.rotation);
@@ -120,6 +168,7 @@ Move BestMove (Board* currentBoard, int currentPiece, int heldPiece)
         {
             bestScore = score;
             bestMove = move;
+            bestAnal = analysis;
         }
     }
 

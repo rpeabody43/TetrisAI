@@ -34,6 +34,8 @@ Board::Board (uint16_t fallRate, std::default_random_engine& randomGenerator) //
       , m_heldPiece(0)
       , m_alreadyHeld(false)
       , m_currentHighest(HEIGHT)
+      , m_score(0)
+      , m_linesCleared(0)
       , m_randomGenerator(randomGenerator)
 {
     // Initialize each bag in sequential order, then shuffle
@@ -51,7 +53,7 @@ uint8_t Board::GetPieceMap (uint8_t rot, uint8_t n) const
     return ret;
 }
 
-uint8_t Board::NthPiece (uint8_t n)
+uint8_t Board::NthPiece (uint8_t n) const
 {
     uint8_t idx = m_bagIdx + n;
     if (idx >= sizeof(m_bags))
@@ -59,6 +61,10 @@ uint8_t Board::NthPiece (uint8_t n)
     return m_bags[idx / 7][idx % 7];
 }
 
+uint8_t Board::GetPieceNum () const
+{
+    return m_bagIdx;
+}
 
 void Board::NextPiece ()
 {
@@ -87,12 +93,12 @@ void Board::NewPiece (uint8_t piece)
     // Spawn the piece in the vanish zone
     if (m_currentHighest <= VANISH_ZONE_HEIGHT + 1)
     {
-        m_fallingPieceAnchor = 3;
+        m_fallingPieceAnchor = ConvertIdx(3, BUFFER_HEIGHT);
     }
     // Otherwise spawn in visible space
     else
     {
-        m_fallingPieceAnchor = ConvertIdx(3, VANISH_ZONE_HEIGHT);
+        m_fallingPieceAnchor = ConvertIdx(3, VANISH_ZONE_HEIGHT + BUFFER_HEIGHT);
     }
 
     // Move up in the bag
@@ -114,7 +120,7 @@ void Board::NewPiece (uint8_t piece)
         else blockOut = true;
     }
 
-    //m_gameover = blockOut;
+    m_gameover = blockOut;
 }
 
 void Board::HoldPiece ()
@@ -187,6 +193,27 @@ void Board::ClearLines ()
 
     // Since y starts from the top, currentHighest needs to be increased
     m_currentHighest += linesCleared;
+
+    m_linesCleared += linesCleared;
+    uint16_t scoreAdd;
+    switch (linesCleared)
+    {
+        default:
+            scoreAdd = 0;
+            break;
+        case 1:
+            scoreAdd = 100;
+            break;
+        case 2:
+            scoreAdd = 300;
+            break;
+        case 3:
+            scoreAdd = 500;
+            break;
+        case 4:
+            scoreAdd = 800;
+    }
+    m_score += scoreAdd*m_linesCleared/10;
 }
 
 void Board::Fall ()
@@ -212,15 +239,15 @@ uint16_t Board::GetGhost ()
 
 uint16_t Board::GetGhost (uint8_t piece, uint16_t anchor, uint8_t currentRot)
 {
-    int delta = 0;
-    while (ValidMove(piece, anchor, currentRot, 0, delta + 10))
-        delta += 10;
+    uint16_t delta = 0;
+    while (ValidMove(piece, anchor, currentRot, 0, delta + Board::WIDTH))
+        delta += Board::WIDTH;
     return anchor + delta;
 }
 
 void Board::HardDrop ()
 {
-    int moveDelta = GetGhost() - m_fallingPieceAnchor;
+    uint16_t moveDelta = GetGhost() - m_fallingPieceAnchor;
     MovePiece(0, moveDelta, true);
     ClearLines();
     NewPiece();
@@ -238,7 +265,7 @@ bool Board::ValidMove (uint8_t piece, uint16_t anchor, uint8_t currentRot, int8_
         int oldPos = anchor + TetrominoData::GetPieceMap(piece, currentRot, i);
         int newPos = anchor + moveDelta + TetrominoData::GetPieceMap(piece, currentRot + rotDelta, i);
         // If it's an index error on either side
-        if (newPos >= HEIGHT * WIDTH || newPos < 0)
+        if (newPos >= TOTAL_SIZE || newPos < 0)
             return false;
         // If it's a nonempty square, that also isn't the falling piece itself
         // The falling piece is stored as negative numbers
@@ -294,6 +321,12 @@ void Board::UpdateFallingPiece (int8_t rotDelta, int16_t moveDelta)
     if (ValidMove(0, moveDelta))
         MovePiece(0, moveDelta, false);
 
+    // Make sure m_fallingPieceRot is between 0 and 3
+    while (m_fallingPieceRot + rotDelta < 0)
+        rotDelta += 4;
+    while (m_fallingPieceRot + rotDelta > 3)
+        rotDelta -= 4;
+
     int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
     int i = 0;
     // O pieces should not be rotated / wall kicked at all
@@ -317,7 +350,7 @@ void Board::UpdateFallingPiece (int8_t rotDelta, int16_t moveDelta)
 
     if (i != 5)
     {
-        int wallKick;
+        int8_t wallKick;
         if (m_fallingPiece == TetrominoData::I)
             wallKick = TetrominoData::I_WALL_KICKS[wallKickTable][i];
         else
@@ -361,8 +394,8 @@ void Board::Update (Input& input, uint32_t ticks)
         Fall();
     }
 
-    int moveDelta = 0;
-    int rotDelta = 0;
+    int16_t moveDelta = 0;
+    int8_t rotDelta = 0;
 
     if (input.moveLeft)
         moveDelta -= 1;
@@ -379,12 +412,6 @@ void Board::Update (Input& input, uint32_t ticks)
     if (input.holdPiece)
         HoldPiece();
 
-    // Make sure rotDelta is between 0 and 3
-    while (m_fallingPieceRot + rotDelta < 0)
-        rotDelta += 4;
-    while (m_fallingPieceRot + rotDelta > 3)
-        rotDelta -= 4;
-
     UpdateFallingPiece(rotDelta, moveDelta);
 
 }
@@ -399,14 +426,14 @@ uint8_t Board::GetFallingPieceRot () const
     return m_fallingPieceRot;
 }
 
-int8_t Board::GetSquare (uint8_t x, uint8_t y)
+int8_t Board::GetSquare (uint8_t x, uint8_t y) const
 {
     return m_board[ConvertIdx(x, y)];
 }
 
-uint16_t Board::TicksPerStep () const
+int8_t Board::GetSquare (uint16_t idx) const
 {
-    return m_fallRate;
+    return m_board[idx];
 }
 
 uint8_t Board::GetHeldPiece () const
@@ -422,4 +449,14 @@ uint8_t Board::GetHighestRow () const
 bool Board::GameOver () const
 {
     return m_gameover;
+}
+
+size_t Board::GetScore () const
+{
+    return m_score;
+}
+
+size_t Board::GetLinesCleared () const
+{
+    return m_linesCleared;
 }

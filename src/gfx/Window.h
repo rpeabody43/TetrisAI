@@ -9,6 +9,9 @@
 class GameWindow
 {
 public:
+    static constexpr uint8_t OFFSCREEN_ROWS = Board::VANISH_ZONE_HEIGHT + Board::BUFFER_HEIGHT;
+    static constexpr uint8_t OFFSCREEN_SQUARES = Board::WIDTH*OFFSCREEN_ROWS;
+
     /**
      * Constructor: creates a new Window.
      * Run Init() afterwards.
@@ -71,7 +74,9 @@ private:
      * @param font What SDL font to use.
      * @param color What color the text should be.
      */
-    void DrawTxt (int x, int y, const char* txt, TTF_Font* font, SDL_Color color);
+    void DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* font, SDL_Color color);
+
+    void DrawScore (int x, int y);
 
     uint16_t m_screenW;
     uint16_t m_screenH;

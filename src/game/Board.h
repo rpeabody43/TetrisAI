@@ -20,9 +20,10 @@ class Board
 {
 public:
     static constexpr uint8_t WIDTH = 10;
-    static constexpr uint8_t HEIGHT = 24;
+    static constexpr uint8_t HEIGHT = 25;
     static constexpr uint8_t VISIBLE_HEIGHT = 20;
-    static constexpr uint8_t VANISH_ZONE_HEIGHT = HEIGHT - VISIBLE_HEIGHT;
+    static constexpr uint8_t BUFFER_HEIGHT = 1;
+    static constexpr uint8_t VANISH_ZONE_HEIGHT = HEIGHT - VISIBLE_HEIGHT - BUFFER_HEIGHT;
     static constexpr uint16_t TOTAL_SIZE = WIDTH * HEIGHT;
 
     /**
@@ -65,7 +66,7 @@ public:
      * Gets the lowest possible position the current piece can fall to.
      * @return The anchor of the lowest position
      */
-    uint16_t GetGhost ();
+    [[nodiscard]] uint16_t GetGhost ();
 
     /**
      * Gets the lowest possible position a certain piece can fall to.
@@ -74,7 +75,7 @@ public:
      * @param currentRot The rotation of the piece.
      * @return The anchor of the lowest position.
      */
-    uint16_t GetGhost (uint8_t piece, uint16_t anchor, uint8_t currentRot);
+    [[nodiscard]] uint16_t GetGhost (uint8_t piece, uint16_t anchor, uint8_t currentRot);
 
     /**
      * Get the square (cell) associated with a certain x, y coordinate.
@@ -82,13 +83,26 @@ public:
      * @param y The vertical coordinate.
      * @return The value of the square.
      */
-    int8_t GetSquare (uint8_t x, uint8_t y);
+    [[nodiscard]] int8_t GetSquare (uint8_t x, uint8_t y) const;
+
+    /**
+     * Get the square (cell) associated with a certain index
+     * @param idx The index of the square
+     * @return The value of the square.
+     */
+    [[nodiscard]] int8_t GetSquare (uint16_t idx) const;
 
     /**
      * Gets the nth piece next up.
      * @param n Which piece to get
      */
-    uint8_t NthPiece (uint8_t delta);
+    [[nodiscard]] uint8_t NthPiece (uint8_t delta) const;
+
+    /**
+     * Gets the current number piece in the bags
+     * @return A number between 0 and 13, as there are two bags of 7 that are shuffled/swapped
+     */
+    [[nodiscard]] uint8_t GetPieceNum () const;
 
     //region const getters
 
@@ -100,14 +114,9 @@ public:
     [[nodiscard]] uint8_t GetPieceMap (uint8_t rot, uint8_t n) const;
 
     /**
-     * @return The rate the pieces fall.
-     */
-    [[nodiscard]] uint16_t TicksPerStep () const;
-
-    /**
      * @return The anchor point of the falling piece.
      */
-    [[maybe_unused]] [[nodiscard]] uint16_t GetFallingPieceAnchor () const;
+    [[nodiscard]] uint16_t GetFallingPieceAnchor () const;
 
     /**
      * @return The held piece.
@@ -133,6 +142,16 @@ public:
      * @return True if the game is over, false otherwise.
      */
     [[nodiscard]] bool GameOver () const;
+
+    /**
+     * @return The current score of the game
+     */
+    [[nodiscard]] size_t GetScore () const;
+
+    /**
+     * @return How many lines have been cleared so far.
+     */
+    [[nodiscard]] size_t GetLinesCleared() const;
 
     //endregion
 
@@ -249,6 +268,9 @@ private:
     // Highest point reached on the board.
     // Lower number -> higher because y coordinate is from the top
     uint8_t m_currentHighest;
+
+    size_t m_score;
+    size_t m_linesCleared;
 
     std::default_random_engine& m_randomGenerator;
 };

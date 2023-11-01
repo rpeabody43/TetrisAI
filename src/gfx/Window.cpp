@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -143,7 +144,7 @@ void GameWindow::Draw (Board* currentBoard)
         {
             int absx = x * squareSize + boardOffsetX;
 
-            int8_t sq = currentBoard->GetSquare(x, y + Board::VANISH_ZONE_HEIGHT);
+            int8_t sq = currentBoard->GetSquare(x, y + OFFSCREEN_ROWS);
             if (sq == 0)
                 continue;
 
@@ -169,6 +170,7 @@ void GameWindow::Draw (Board* currentBoard)
                 heldPieceOffsetY - squareSize, "HOLD", m_pFont28, txtColor);
     }
 
+    // Draw up next
     const int upNextOffsetX = boardOffsetX + boardScreenW + 2 * squareSize;
     const int upNextOffsetY = boardOffsetY + 2 * squareSize;
     for (int i = 0; i < 3; i++)
@@ -179,6 +181,23 @@ void GameWindow::Draw (Board* currentBoard)
     DrawTxt(upNextOffsetX + 2 * squareSize, upNextOffsetY - squareSize,
             "UP NEXT", m_pFont28, txtColor);
 
+    // Draw score
+    uint16_t scoreOffsetX = boardOffsetX + boardScreenW + 4*squareSize;
+    uint16_t scoreOffsetY = boardOffsetY + 12 * squareSize;
+    DrawTxt(scoreOffsetX, scoreOffsetY, "SCORE", m_pFont28, txtColor);
+    size_t score = currentBoard->GetScore();
+    std::string scoreString = std::to_string(score);
+    char const* scoreChars = scoreString.c_str();
+    DrawTxt(scoreOffsetX, scoreOffsetY + squareSize, scoreChars, m_pFont28, txtColor);
+
+    uint16_t linesOffsetY = scoreOffsetY + squareSize*2 + 20;
+    DrawTxt(scoreOffsetX, linesOffsetY, "LINES", m_pFont28, txtColor);
+    size_t linesCleared = currentBoard->GetLinesCleared();
+    std::string linesString = std::to_string(linesCleared);
+    char const* linesChars = linesString.c_str();
+    DrawTxt(scoreOffsetX, linesOffsetY + squareSize, linesChars, m_pFont28, txtColor);
+
+    // Game Over screen
     if (currentBoard->GameOver())
     {
         /*
@@ -201,7 +220,10 @@ void GameWindow::Draw (Board* currentBoard)
                 m_pFont28, gameOverTxtColor);
     }
 
-    /*int anchor = currentBoard->FallingPieceAnchor();
+    /*
+    // Draw anchor square
+    // Use for debugging
+    int anchor = currentBoard->GetFallingPieceAnchor() - OFFSCREEN_SQUARES;
     int x = (anchor % 10)*squareSize + boardOffsetX;
     int y = (anchor / 10)*squareSize + boardOffsetY;
 
@@ -212,9 +234,9 @@ void GameWindow::Draw (Board* currentBoard)
             squareSize,
             squareSize
     };
-
     SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(m_pRenderer, &anchorSq);*/
+    SDL_RenderFillRect(m_pRenderer, &anchorSq);
+    */
 
     SDL_RenderPresent(m_pRenderer);
 }
@@ -247,7 +269,7 @@ void GameWindow::DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t
     {
         int delta = TetrominoData::GetPieceMap(piece, rot, i);
         int ghostIdx = currentBoard->GetGhost();
-        ghostIdx -= Board::VANISH_ZONE_HEIGHT * Board::WIDTH;
+        ghostIdx -= OFFSCREEN_SQUARES;
         int r = Board::Row(ghostIdx + delta);
         int c = Board::Col(ghostIdx + delta);
         SDL_Rect pieceSq = {c * sqSize + xOffset, r * sqSize + yOffset, sqSize, sqSize};
@@ -260,7 +282,7 @@ void GameWindow::DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t
     }
 }
 
-void GameWindow::DrawTxt (int x, int y, const char* txt, TTF_Font* font,
+void GameWindow::DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* font,
                           SDL_Color color)
 {
     if (font == nullptr)

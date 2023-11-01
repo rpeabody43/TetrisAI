@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../game/Board.h"
 
 struct Move
@@ -7,4 +9,12 @@ struct Move
     bool hold;
 };
 
-Move BestMove (Board* currentBoard, int currentPiece, int heldPiece, int highestPoint);
+struct Weights
+{
+    double holesCount;
+    double aggregateHeight;
+    double completeLines;
+    double heightStdDev;
+};
+
+Move BestMove (Board* currentBoard, Weights& weights);

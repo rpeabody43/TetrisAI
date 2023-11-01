@@ -15,7 +15,9 @@ find_package(SDL2_ttf REQUIRED)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules)
 
 # Add source to this project's executable.
-set(SOURCES src/main.cpp src/App.cpp src/game/Board.cpp  src/ai/eval.cpp src/gfx/Window.cpp)
+set(SOURCES src/main.cpp src/App.cpp src/game/Board.cpp  src/ai/eval.cpp src/gfx/Window.cpp
+        src/ai/Agent.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

@@ -6,7 +6,7 @@
 
 #include "App.h"
 #include "game/Board.h"
-#include "ai/eval.h"
+#include "ai/Agent.h"
 
 constexpr uint16_t WINDOW_W = 1280;
 constexpr uint16_t WINDOW_H = 960;
@@ -64,33 +64,89 @@ static void PersistentKey (const uint8_t* keystate, KeyHandler& k, bool& input)
     }
 }
 
+Input UserInput (const uint8_t* keystate)
+{
+    Input input = {};
+
+    static KeyHandler moveLeft = {SDL_SCANCODE_LEFT, 25, 50, 0, 0};
+    static KeyHandler moveRight = {SDL_SCANCODE_RIGHT, 25, 50, 0, 0};
+    static KeyHandler softDrop = {SDL_SCANCODE_DOWN, 20, 20, 0, 0};
+    static KeyHandler rotClockwise = {SDL_SCANCODE_UP, 75, 75, 0, 0};
+    static KeyHandler rotCountClockwise = {SDL_SCANCODE_Z, 75, 75, 0, 0};
+
+    PersistentKey(keystate, softDrop, input.softDrop);
+    PersistentKey(keystate, moveLeft, input.moveLeft);
+    PersistentKey(keystate, moveRight, input.moveRight);
+    PersistentKey(keystate, rotClockwise, input.rotClockwise);
+    PersistentKey(keystate, rotCountClockwise, input.rotCountClockwise);
+
+    return input;
+}
+
+bool FilterAiInput ()
+{
+    static uint8_t delayMs = 20;
+    static uint8_t currentDelay = 0;
+
+    SDL_Delay(1);
+    currentDelay++;
+    if (currentDelay >= delayMs)
+    {
+        currentDelay = 0;
+        return true;
+    }
+    return false;
+}
+
 void App::Run ()
 {
-    KeyHandler moveLeft = {SDL_SCANCODE_LEFT, 25, 50, 0, 0};
-    KeyHandler moveRight = {SDL_SCANCODE_RIGHT, 25, 50, 0, 0};
-    KeyHandler softDrop = {SDL_SCANCODE_DOWN, 20, 20, 0, 0};
-    KeyHandler rotClockwise = {SDL_SCANCODE_UP, 75, 75, 0, 0};
-    KeyHandler rotCountClockwise = {SDL_SCANCODE_Z, 75, 75, 0, 0};
+    bool aiPlayer = true;
+    Agent agent;
 
     bool end = false;
     while (!end)
     {
-        Input input = {};
-
         SDL_Event event;
+
+        Input input {};
+        if (aiPlayer)
+        {
+            if (m_pBoard->GetFallingPiece() > 0)
+            {
+                input = agent.MakeMove(m_pBoard);
+
+                if (!FilterAiInput())
+                {
+                    input.moveLeft = false;
+                    input.moveRight = false;
+                    input.rotCountClockwise = false;
+                    input.rotClockwise = false;
+                    input.softDrop = false;
+                }
+
+            }
+        }
+        else
+        {
+            const uint8_t* keystate = SDL_GetKeyboardState(nullptr);
+            input = UserInput(keystate);
+        }
+
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
             {
                 end = true;
             }
-
             if (event.type == SDL_KEYDOWN)
             {
-                if (event.key.keysym.sym == SDLK_c)
-                    input.holdPiece = true;
-                if (event.key.keysym.sym == SDLK_SPACE)
-                    input.hardDrop = true;
+                if (!aiPlayer)
+                {
+                    if (event.key.keysym.sym == SDLK_c)
+                        input.holdPiece = true;
+                    if (event.key.keysym.sym == SDLK_SPACE)
+                        input.hardDrop = true;
+                }
                 if (event.key.keysym.sym == SDLK_r)
                 {
                     NewGame();
@@ -98,14 +154,6 @@ void App::Run ()
                 }
             }
         }
-
-        const uint8_t* keystate = SDL_GetKeyboardState(nullptr);
-
-        PersistentKey(keystate, softDrop, input.softDrop);
-        PersistentKey(keystate, moveLeft, input.moveLeft);
-        PersistentKey(keystate, moveRight, input.moveRight);
-        PersistentKey(keystate, rotClockwise, input.rotClockwise);
-        PersistentKey(keystate, rotCountClockwise, input.rotCountClockwise);
 
         uint32_t currentTimeMs = SDL_GetTicks();
         m_pBoard->Update(input, currentTimeMs);
