@@ -113,15 +113,9 @@ void App::Run ()
         {
             if (m_pBoard->GetFallingPiece() > 0)
             {
-                input = agent.MakeMove(m_pBoard);
-
-                if (!FilterAiInput())
+                if (FilterAiInput())
                 {
-                    input.moveLeft = false;
-                    input.moveRight = false;
-                    input.rotCountClockwise = false;
-                    input.rotClockwise = false;
-                    input.softDrop = false;
+                    input = agent.MakeMove(m_pBoard);
                 }
 
             }
