@@ -21,9 +21,9 @@ set(COMMON_SOURCES
         src/app/gfx/Window.cpp
         src/app/HumanPlayer.cpp
 )
-add_executable(Human src/app/main_human.cpp ${COMMON_SOURCES})
+add_executable(Human src/main_human.cpp ${COMMON_SOURCES})
 add_executable(GeneticAlgo
-        src/app/main_genetic.cpp
+        src/main_genetic.cpp
         src/ai/genetic/eval.cpp
         src/ai/genetic/Agent.cpp
         src/ai/genetic/train.cpp
