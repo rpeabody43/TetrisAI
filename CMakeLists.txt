@@ -15,11 +15,23 @@ find_package(SDL2_ttf REQUIRED)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake_modules)
 
 # Add source to this project's executable.
-set(SOURCES src/main.cpp src/App.cpp src/game/Board.cpp  src/ai/eval.cpp src/gfx/Window.cpp
-        src/ai/Agent.cpp
+set(COMMON_SOURCES
+        src/app/App.cpp
+        src/game/Board.cpp
+        src/app/gfx/Window.cpp
+        src/app/HumanPlayer.cpp
 )
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(Human src/app/main_human.cpp ${COMMON_SOURCES})
+add_executable(GeneticAlgo
+        src/app/main_genetic.cpp
+        src/ai/genetic/eval.cpp
+        src/ai/genetic/Agent.cpp
+        src/ai/genetic/train.cpp
+        ${COMMON_SOURCES}
+)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)
+target_link_libraries(Human ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)
+target_link_libraries(GeneticAlgo ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)

@@ -6,7 +6,7 @@
 
 #if defined(_WIN32) || defined(WIN32)
 
-#include <Windows.h> // To disable Windows scaling
+#include <windows.h> // To disable Windows scaling
 
 #define OS_WINDOWS
 
@@ -14,13 +14,16 @@
 
 #include "Window.h"
 
-GameWindow::GameWindow (uint16_t screenW, uint16_t screenH)
+
+constexpr uint16_t WINDOW_W = 1280;
+constexpr uint16_t WINDOW_H = 960;
+
+
+GameWindow::GameWindow ()
     : m_pRenderer(nullptr)
       , m_pWindow(nullptr)
       , m_pFont28(nullptr)
       , m_pFont40(nullptr)
-      , m_screenW(screenW)
-      , m_screenH(screenH)
 {}
 
 bool GameWindow::UnixScaling ()
@@ -30,10 +33,10 @@ bool GameWindow::UnixScaling ()
 
     std::cout << "rw: " << rw << ", rh: " << rh << std::endl;
 
-    if (rw != m_screenW)
+    if (rw != WINDOW_W)
     {
-        float wScale = (float) rw / (float) m_screenW;
-        float hScale = (float) rh / (float) m_screenH;
+        float wScale = (float) rw / (float) WINDOW_W;
+        float hScale = (float) rh / (float) WINDOW_H;
 
         if (wScale != hScale)
         {
@@ -69,8 +72,8 @@ bool GameWindow::Init ()
             "TetrisAI",
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
-            m_screenW,
-            m_screenH,
+            WINDOW_W,
+            WINDOW_H,
             SDL_WINDOW_ALLOW_HIGHDPI
         );
 
@@ -110,8 +113,8 @@ void GameWindow::Draw (Board* currentBoard)
     static int boardScreenW = Board::WIDTH * squareSize;
     static int boardScreenH = Board::VISIBLE_HEIGHT * squareSize;
 
-    static int boardOffsetX = (m_screenW - boardScreenW) / 2;
-    static int boardOffsetY = (m_screenH - boardScreenH) / 2;
+    static int boardOffsetX = (WINDOW_W - boardScreenW) / 2;
+    static int boardOffsetY = (WINDOW_H - boardScreenH) / 2;
 
     // offsets are so the blocks don't overlap with the border
     SDL_Rect boardOutline = {boardOffsetX - 1, boardOffsetY - 1,
@@ -184,18 +187,28 @@ void GameWindow::Draw (Board* currentBoard)
     // Draw score
     uint16_t scoreOffsetX = boardOffsetX + boardScreenW + 4*squareSize;
     uint16_t scoreOffsetY = boardOffsetY + 12 * squareSize;
-    DrawTxt(scoreOffsetX, scoreOffsetY, "SCORE", m_pFont28, txtColor);
-    size_t score = currentBoard->GetScore();
-    std::string scoreString = std::to_string(score);
-    char const* scoreChars = scoreString.c_str();
-    DrawTxt(scoreOffsetX, scoreOffsetY + squareSize, scoreChars, m_pFont28, txtColor);
-
+    DrawLabeledNumber
+    (
+        scoreOffsetX,
+        scoreOffsetY,
+        squareSize,
+        "SCORE",
+        currentBoard->GetScore(),
+        m_pFont28,
+        txtColor
+    );
     uint16_t linesOffsetY = scoreOffsetY + squareSize*2 + 20;
-    DrawTxt(scoreOffsetX, linesOffsetY, "LINES", m_pFont28, txtColor);
-    size_t linesCleared = currentBoard->GetLinesCleared();
-    std::string linesString = std::to_string(linesCleared);
-    char const* linesChars = linesString.c_str();
-    DrawTxt(scoreOffsetX, linesOffsetY + squareSize, linesChars, m_pFont28, txtColor);
+
+    DrawLabeledNumber
+    (
+        scoreOffsetX,
+        linesOffsetY,
+        squareSize,
+        "LINES",
+        currentBoard->GetLinesCleared(),
+        m_pFont28,
+        txtColor
+    );
 
     // Game Over screen
     if (currentBoard->GameOver())
@@ -236,16 +249,16 @@ void GameWindow::Draw (Board* currentBoard)
     };
     SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
     SDL_RenderFillRect(m_pRenderer, &anchorSq);
-    */
+    /* */
 
     SDL_RenderPresent(m_pRenderer);
 }
 
 void GameWindow::DrawPiece (uint16_t x, uint16_t y, uint8_t piece, uint8_t rot, uint8_t sqSize)
 {
-    if (piece == TetrominoData::I)
+    if (piece == I_PIECE)
         y -= sqSize / 2;
-    else if (piece != TetrominoData::O)
+    else if (piece != O_PIECE)
         x += sqSize / 2;
 
     for (int i = 0; i < 4; i++)
@@ -280,6 +293,14 @@ void GameWindow::DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t
         SDL_SetRenderDrawColor(m_pRenderer, color.r, color.g, color.b, color.a);
         SDL_RenderFillRect(m_pRenderer, &pieceSq);
     }
+}
+
+void GameWindow::DrawLabeledNumber (uint16_t x, uint16_t y, uint8_t offset, const char* label, size_t number, TTF_Font* font, SDL_Color color)
+{
+    DrawTxt(x, y, label, font, color);
+    std::string numString = std::to_string(number);
+    char const* numChars = numString.c_str();
+    DrawTxt(x, y + offset, numChars, m_pFont28, color);
 }
 
 void GameWindow::DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* font,

@@ -16,6 +16,7 @@ struct Input
     bool holdPiece;
 };
 
+/* Contains the state of the Tetris game */
 class Board
 {
 public:
@@ -23,6 +24,7 @@ public:
     static constexpr uint8_t HEIGHT = 25;
     static constexpr uint8_t VISIBLE_HEIGHT = 20;
     static constexpr uint8_t BUFFER_HEIGHT = 1;
+    static constexpr uint8_t BUFFER_SQUARES = BUFFER_HEIGHT*WIDTH;
     static constexpr uint8_t VANISH_ZONE_HEIGHT = HEIGHT - VISIBLE_HEIGHT - BUFFER_HEIGHT;
     static constexpr uint16_t TOTAL_SIZE = WIDTH * HEIGHT;
 

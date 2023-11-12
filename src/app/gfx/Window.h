@@ -3,7 +3,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-#include "../game/Board.h"
+#include "game/Board.h"
 
 /* Draws the game of Tetris to the screen. */
 class GameWindow
@@ -18,7 +18,7 @@ public:
      * @param screenW The width of the window.
      * @param screenH The height of the window.
      */
-    GameWindow (uint16_t screenW, uint16_t screenH);
+    GameWindow ();
 
     /**
      * Initializes the window and the SDL things it depends on.
@@ -67,6 +67,18 @@ private:
     void DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t yOffset, uint8_t piece, uint8_t rot, uint8_t sqSize);
 
     /**
+     * Draw a value like to the screen with a label like "SCORE" centered above it.
+     * @param x The x coordinate to center the text.
+     * @param y The y coordinate to center the label text.
+     * @param offset How far the value should be from the label.
+     * @param label The label to draw.
+     * @param number The value to draw.
+     * @param font What SDL font to use.
+     * @param color What color the text should be.
+     */
+    void DrawLabeledNumber (uint16_t x, uint16_t y, uint8_t offset, const char* label, size_t number, TTF_Font* font, SDL_Color color);
+
+    /**
      * Draw some text to the screen.
      * @param x The x position to center the text.
      * @param y The y position to center the text.
@@ -77,9 +89,6 @@ private:
     void DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* font, SDL_Color color);
 
     void DrawScore (int x, int y);
-
-    uint16_t m_screenW;
-    uint16_t m_screenH;
 
     SDL_Renderer* m_pRenderer;
     SDL_Window* m_pWindow;

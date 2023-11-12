@@ -1,12 +1,14 @@
 #include "Agent.h"
 
-Agent::Agent ()
-    : m_weights({-20.0, -10.0, 50.0, -1.0})
+Agent::Agent (bool hardDrop, Weights weights)
+    : m_weights(weights)
       , m_workingMove({})
       , m_currentPieceNum(14)
+      , m_fitness(0)
+      , m_hardDrop(hardDrop)
 {}
 
-Input Agent::MakeMove (Board* currentBoard)
+Input Agent::GenInput (Board* currentBoard)
 {
     Input input = {};
     if (m_currentPieceNum != currentBoard->GetPieceNum())
@@ -50,9 +52,19 @@ Input Agent::MakeMove (Board* currentBoard)
     {
         input.moveRight = true;
     }
-    else if (rotDelta == 0)
+    else
     {
-        input.hardDrop = true;
+        if (m_hardDrop)
+        {
+            if (rotDelta == 0)
+            {
+                input.hardDrop = true;
+            }
+        }
+        else
+        {
+            input.softDrop = true;
+        }
     }
 
 

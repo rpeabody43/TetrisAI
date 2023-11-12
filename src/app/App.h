@@ -1,24 +1,32 @@
 #pragma once
 
+#include <functional>
 #include <random>
 
 #include <SDL.h>
-#include <SDL_ttf.h>
 
 #include "game/Board.h"
 #include "gfx/Window.h"
+#include "ai/Player.h"
 
 /* Controls the game loop. */
 class App
 {
 public:
     /**
-     * Creates a new App. 
+     * Creates a new App with user input.
+     * For when the game is being played by a human.
      * Run App.Init() afterwards.
-     * @param screenW The width of the window.
-     * @param screenH The height of the window.
      */
     App ();
+
+    /**
+     * Creates a new App with a certain kind of player.
+     * @param player An object that can generate moves from the board state.
+     *
+     * APP TAKES CONTROL OF AND DELETES PLAYER IN DESTRUCTOR.
+     */
+    explicit App (Player* player);
 
     /* Resets the game state. */
     void NewGame ();
@@ -45,4 +53,6 @@ private:
     std::default_random_engine m_randomGenerator;
     Board* m_pBoard;
     GameWindow m_window;
+    bool m_userInput;
+    Player* m_pPlayer;
 };

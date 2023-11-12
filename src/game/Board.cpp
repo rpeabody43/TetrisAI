@@ -330,13 +330,13 @@ void Board::UpdateFallingPiece (int8_t rotDelta, int16_t moveDelta)
     int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
     int i = 0;
     // O pieces should not be rotated / wall kicked at all
-    if (m_fallingPiece == TetrominoData::O || rotDelta == 0)
+    if (m_fallingPiece == O_PIECE || rotDelta == 0)
         return;
         // Loop through the wall kicks at this rotation until one works, or they all fail
     else
     {
         // The I piece has a different table of wall kicks per SRS
-        if (m_fallingPiece == TetrominoData::I)
+        if (m_fallingPiece == I_PIECE)
         {
             while (i < 5 && !ValidMove(rotDelta, TetrominoData::I_WALL_KICKS[wallKickTable][i]))
                 i++;
@@ -351,7 +351,7 @@ void Board::UpdateFallingPiece (int8_t rotDelta, int16_t moveDelta)
     if (i != 5)
     {
         int8_t wallKick;
-        if (m_fallingPiece == TetrominoData::I)
+        if (m_fallingPiece == I_PIECE)
             wallKick = TetrominoData::I_WALL_KICKS[wallKickTable][i];
         else
             wallKick = TetrominoData::WALL_KICKS[wallKickTable][i];

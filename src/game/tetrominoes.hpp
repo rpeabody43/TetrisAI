@@ -2,19 +2,16 @@
 
 #include <cstdint>
 
+#define I_PIECE 1
+#define J_PIECE 2
+#define L_PIECE 3
+#define O_PIECE 4
+#define S_PIECE 5
+#define Z_PIECE 6
+#define T_PIECE 7
+
 namespace TetrominoData
 {
-    enum
-    {
-        I = 1,
-        J = 2,
-        L = 3,
-        O = 4,
-        S = 5,
-        Z = 6,
-        T = 7,
-    };
-
     // Piece maps, where to place squares relative to a piece's anchor.
     const uint8_t MAPS[7][4][4] =
         {
