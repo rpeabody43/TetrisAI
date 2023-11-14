@@ -38,3 +38,6 @@ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
 # Link SDL to targets
 target_link_libraries(Human ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)
 target_link_libraries(GeneticAlgo ${SDL2_LIBRARIES} SDL2_ttf::SDL2_ttf)
+
+# Unit tests
+add_subdirectory(tests)
