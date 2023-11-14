@@ -25,6 +25,8 @@ public:
      * @param player An object that can generate moves from the board state.
      *
      * APP TAKES CONTROL OF AND DELETES PLAYER IN DESTRUCTOR.
+     *
+     * Run App.Init() afterwards.
      */
     explicit App (Player* player);
 
