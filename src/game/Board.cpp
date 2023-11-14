@@ -91,7 +91,7 @@ void Board::NewPiece (uint8_t piece)
     m_fallingPieceRot = 0;
     // If the highest point is just below the vanish zone
     // Spawn the piece in the vanish zone
-    if (m_currentHighest <= VANISH_ZONE_HEIGHT + 1)
+    if (m_currentHighest <= VANISH_ZONE_HEIGHT + 2)
     {
         m_fallingPieceAnchor = ConvertIdx(3, BUFFER_HEIGHT);
     }
