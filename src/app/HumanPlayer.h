@@ -24,7 +24,7 @@ private:
      * @param keystate the return of SDL_GetKeyboardState().
      * @return An Input object.
      */
-    Input UserInputFromKeys (const uint8_t* keystate);
+    Input UserInputFromKeys (const bool* keystate);
 
     /**
      * Prevents a "held" key from firing over and over again
@@ -32,7 +32,7 @@ private:
      * @param k Which KeyHandler to use.
      * @return True if the input should be active.
      */
-    static bool PersistentKey (const uint8_t* keystate, KeyHandler& k);
+    static bool PersistentKey (const bool* keystate, KeyHandler& k);
 
     KeyHandler m_moveLeft = {SDL_SCANCODE_LEFT, 25, 50, 0, 0};
     KeyHandler m_moveRight = {SDL_SCANCODE_RIGHT, 25, 50, 0, 0};

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/Board.h"
+#include "../../game/Board.h"
 
 /* A "move" made up of the final position, rotation, and if a hold was involved */
 struct Move

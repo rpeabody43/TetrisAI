@@ -1,9 +1,9 @@
 #pragma once
 
-#include <SDL.h>
-#include <SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
-#include "game/Board.h"
+#include "../../game/Board.h"
 
 /* Draws the game of Tetris to the screen. */
 class GameWindow

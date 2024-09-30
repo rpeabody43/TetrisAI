@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include <SDL.h>
-#include <SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #if defined(_WIN32) || defined(WIN32)
 
@@ -29,7 +29,7 @@ GameWindow::GameWindow ()
 bool GameWindow::UnixScaling ()
 {
     int rw = 0, rh = 0;
-    SDL_GetRendererOutputSize(m_pRenderer, &rw, &rh);
+    SDL_GetCurrentRenderOutputSize(m_pRenderer, &rw, &rh);
 
     std::cout << "rw: " << rw << ", rh: " << rh << std::endl;
 
@@ -45,7 +45,7 @@ bool GameWindow::UnixScaling ()
             return false;
         }
 
-        SDL_RenderSetScale(m_pRenderer, wScale, hScale);
+        SDL_SetRenderScale(m_pRenderer, wScale, hScale);
     }
     return true;
 }
@@ -53,7 +53,7 @@ bool GameWindow::UnixScaling ()
 bool GameWindow::Init ()
 {
 
-    if (SDL_Init(SDL_INIT_VIDEO) > 0)
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
         std::cout << "SDL FAILED TO INITIALIZE: " << SDL_GetError()
                   << std::endl;
@@ -70,14 +70,12 @@ bool GameWindow::Init ()
     m_pWindow = SDL_CreateWindow
         (
             "TetrisAI",
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
             WINDOW_W,
             WINDOW_H,
-            SDL_WINDOW_ALLOW_HIGHDPI
+            SDL_WINDOW_HIGH_PIXEL_DENSITY
         );
 
-    m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_SOFTWARE);
+    m_pRenderer = SDL_CreateRenderer(m_pWindow, nullptr);
     SDL_SetRenderDrawBlendMode(m_pRenderer, SDL_BLENDMODE_BLEND);
 
     m_pFont28 = TTF_OpenFont("Retro Gaming.ttf", 28);
@@ -117,14 +115,18 @@ void GameWindow::Draw (Board* currentBoard)
     static int boardOffsetY = (WINDOW_H - boardScreenH) / 2;
 
     // offsets are so the blocks don't overlap with the border
-    SDL_Rect boardOutline = {boardOffsetX - 1, boardOffsetY - 1,
-                             boardScreenW + 2, boardScreenH + 2};
+    SDL_FRect boardOutline = {
+        (float) boardOffsetX - 1,
+        (float) boardOffsetY - 1,
+        (float) boardScreenW + 2,
+        (float) boardScreenH + 2
+    };
 
     SDL_SetRenderDrawColor(m_pRenderer, 18, 18, 18, 255);
     SDL_RenderClear(m_pRenderer);
 
     SDL_SetRenderDrawColor(m_pRenderer, 93, 93, 93, 255);
-    SDL_RenderDrawRect(m_pRenderer, &boardOutline);
+    SDL_RenderRect(m_pRenderer, &boardOutline);
 
     if (currentBoard->GetFallingPiece() > 0)
     {
@@ -151,7 +153,12 @@ void GameWindow::Draw (Board* currentBoard)
             if (sq == 0)
                 continue;
 
-            SDL_Rect sqRect = {absx, absy, squareSize, squareSize};
+            SDL_FRect sqRect = {
+                (float) absx,
+                (float) absy,
+                (float) squareSize,
+                (float) squareSize
+            };
 
             unsigned int hex = TetrominoData::HEX_CODES[abs(sq) - 1];
             SDL_Color color = ConvertHex(hex);
@@ -240,12 +247,12 @@ void GameWindow::Draw (Board* currentBoard)
     int x = (anchor % 10)*squareSize + boardOffsetX;
     int y = (anchor / 10)*squareSize + boardOffsetY;
 
-    SDL_Rect anchorSq =
+    SDL_FRect anchorSq =
     {
-            x,
-            y,
-            squareSize,
-            squareSize
+            (float) x,
+            (float) y,
+            (float) squareSize,
+            (float) squareSize
     };
     SDL_SetRenderDrawColor(m_pRenderer, 0, 0, 255, 255);
     SDL_RenderFillRect(m_pRenderer, &anchorSq);
@@ -266,7 +273,12 @@ void GameWindow::DrawPiece (uint16_t x, uint16_t y, uint8_t piece, uint8_t rot, 
         int delta = TetrominoData::GetPieceMap(piece, rot, i);
         int r = Board::Row(delta);
         int c = Board::Col(delta);
-        SDL_Rect pieceSq = {x + c * sqSize, y + r * sqSize, sqSize, sqSize};
+        SDL_FRect pieceSq = {
+            (float) x + c * sqSize,
+            (float) y + r * sqSize,
+            (float) sqSize,
+            (float) sqSize
+        };
 
         unsigned int hex = TetrominoData::HEX_CODES[piece - 1];
         SDL_Color color = ConvertHex(hex);
@@ -285,7 +297,12 @@ void GameWindow::DrawGhostPiece (Board* currentBoard, uint16_t xOffset, uint16_t
         ghostIdx -= OFFSCREEN_SQUARES;
         int r = Board::Row(ghostIdx + delta);
         int c = Board::Col(ghostIdx + delta);
-        SDL_Rect pieceSq = {c * sqSize + xOffset, r * sqSize + yOffset, sqSize, sqSize};
+        SDL_FRect pieceSq = {
+            (float) c * sqSize + xOffset,
+            (float) r * sqSize + yOffset,
+            (float) sqSize,
+            (float) sqSize
+        };
 
         unsigned int hex = TetrominoData::HEX_CODES[piece - 1];
         SDL_Color color = ConvertHex(hex);
@@ -309,10 +326,10 @@ void GameWindow::DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* fon
     if (font == nullptr)
     {
         std::cout << "Failed to load font" << std::endl;
-        std::cout << "SDL_TTF ERR: " << TTF_GetError() << std::endl;
+        std::cout << "SDL_TTF ERR: " << SDL_GetError() << std::endl;
         return;
     }
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, txt, color);
+    SDL_Surface* textSurface = TTF_RenderText_Blended(font, txt, 0, color);
     if (textSurface == nullptr)
     {
         std::cout << "Failed to initialize text surface" << std::endl;
@@ -326,11 +343,21 @@ void GameWindow::DrawTxt (uint16_t x, uint16_t y, const char* txt, TTF_Font* fon
         return;
     }
 
-    SDL_Rect src = {0, 0, textSurface->w, textSurface->h};
-    SDL_Rect dst = {x - src.w / 2, y - src.h / 2, src.w, src.h};
+    SDL_FRect src = {
+        0.0, 
+        0.0, 
+        (float) textSurface->w, 
+        (float) textSurface->h
+    };
+    SDL_FRect dst = {
+        (float) x - src.w / 2, 
+        (float) y - src.h / 2, 
+        (float) src.w, 
+        (float) src.h
+    };
 
-    SDL_RenderCopy(m_pRenderer, textTexture, &src, &dst);
-    SDL_FreeSurface(textSurface);
+    SDL_RenderTexture(m_pRenderer, textTexture, &src, &dst);
+    SDL_DestroySurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
 

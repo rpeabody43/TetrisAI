@@ -3,8 +3,8 @@
 #include <cfloat>
 
 #include "eval.h"
-#include "game/Board.h"
-#include "game/tetrominoes.hpp"
+#include "../../game/Board.h"
+#include "../../game/tetrominoes.hpp"
 
 struct BoardAnalysis
 {

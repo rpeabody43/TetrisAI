@@ -2,11 +2,12 @@
 #include <random>
 #include <chrono>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "App.h"
 #include "HumanPlayer.h"
-#include "game/Board.h"
+#include "../game/Board.h"
 
 App::App (Player* player)
     : m_pBoard(nullptr)
@@ -67,20 +68,20 @@ void App::Run ()
 
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_EVENT_QUIT)
             {
                 end = true;
             }
-            if (event.type == SDL_KEYDOWN)
+            if (event.type == SDL_EVENT_KEY_DOWN)
             {
                 if (m_userInput)
                 {
-                    if (event.key.keysym.sym == SDLK_c)
+                    if (event.key.key == SDLK_C)
                         input.holdPiece = true;
-                    if (event.key.keysym.sym == SDLK_SPACE)
+                    if (event.key.key == SDLK_SPACE)
                         input.hardDrop = true;
                 }
-                if (event.key.keysym.sym == SDLK_r)
+                if (event.key.key == SDLK_R)
                 {
                     NewGame();
                     continue;
@@ -88,7 +89,7 @@ void App::Run ()
             }
         }
 
-        uint32_t currentTimeMs = SDL_GetTicks();
+        uint64_t currentTimeMs = SDL_GetTicks();
         m_pBoard->Update(input, currentTimeMs);
 
         m_window.Draw(m_pBoard);

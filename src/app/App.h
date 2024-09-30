@@ -3,11 +3,11 @@
 #include <functional>
 #include <random>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
-#include "game/Board.h"
+#include "../game/Board.h"
+#include "../ai/Player.h"
 #include "gfx/Window.h"
-#include "ai/Player.h"
 
 /* Controls the game loop. */
 class App

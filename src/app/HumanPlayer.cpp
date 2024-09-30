@@ -1,8 +1,8 @@
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "HumanPlayer.h"
 
-bool HumanPlayer::PersistentKey (const uint8_t* keystate, KeyHandler& k)
+bool HumanPlayer::PersistentKey (const bool* keystate, KeyHandler& k)
 {
     bool ret = false;
     if (keystate[k.scancode])
@@ -30,7 +30,7 @@ bool HumanPlayer::PersistentKey (const uint8_t* keystate, KeyHandler& k)
     return ret;
 }
 
-Input HumanPlayer::UserInputFromKeys (const uint8_t* keystate)
+Input HumanPlayer::UserInputFromKeys (const bool* keystate)
 {
     Input input =
     {
