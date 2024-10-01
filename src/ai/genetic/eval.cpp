@@ -2,124 +2,124 @@
 #include <vector>
 #include <cfloat>
 
-#include "eval.h"
-#include "../../game/Board.h"
+#include "eval.hpp"
+#include "../../game/Board.hpp"
 #include "../../game/tetrominoes.hpp"
 
-struct BoardAnalysis
-{
-    uint8_t holesCount;         // Open squares with filled squares above
-    uint16_t aggregateHeight;   // The total number of filled squares
-    uint8_t completeLines;      // Amount of lines to be cleared
-    double heightStdDev;        // Flatter board = better
-    uint8_t highestPoint;       // Highest point reached
-    uint8_t blocksOverHoles;    // How many blocks are above holes in the board
+struct BoardAnalysis {
+    uint8_t holes_count;         // Open squares with filled squares above
+    uint16_t aggregate_height;   // The total number of filled squares
+    uint8_t complete_lines;      // Amount of lines to be cleared
+    double height_std_dev;       // Flatter board = better
+    uint8_t highest_point;       // Highest point reached
+    uint8_t blocks_over_holes;   // How many blocks are above holes in the board
 };
 
 /**
- * @param highestPoints An array of the highest points in each column.
+ * @param highest_points An array of the highest points in each column.
  * @return The standard deviation of heights.
  */
-double GetHeightStdDev (const int highestPoints[Board::WIDTH])
-{
+double get_height_std_dev (const int highest_points[Board::WIDTH]) {
     int sum = 0, i;
-    double avg, dev, standardDev = 0;
-    for (i = 0; i < Board::WIDTH; i++)
-    {
-        sum += highestPoints[i];
+    double avg, dev, standard_dev = 0;
+    for (i = 0; i < Board::WIDTH; i++) {
+        sum += highest_points[i];
     }
 
     avg = (double) sum / Board::WIDTH;
-    for (i = 0; i < Board::WIDTH; i++)
-    {
-        dev = highestPoints[i] - avg;
-        standardDev += dev * dev;
+    for (i = 0; i < Board::WIDTH; i++) {
+        dev = highest_points[i] - avg;
+        standard_dev += dev * dev;
     }
-    return std::sqrt(standardDev / Board::WIDTH);
+    return std::sqrt(standard_dev / Board::WIDTH);
 }
 
 /**
  * Runs each of the heuristics on the current board with a hypothetical move.
- * @param currentBoard The current board state.
+ * @param current_board The current board state.
  * This method does not modify the Board object.
- * @param pieceAnchor Where the proposed move would end.
+ * @param piece_anchor Where the proposed move would end.
  * @param piece Which piece the move is with.
- * @param pieceRot The rotation of the piece after the move.
+ * @param piece_rot The rotation of the piece after the move.
  * @return A BoardAnalysis object with various heuristics
  */
-BoardAnalysis AnalyzeBoard (Board* currentBoard, int pieceAnchor, int piece, int pieceRot)
-{
-    int pieceSquares[4] = {};
-    int squareIdx = 0;
-    for (int i = 0; i < 4; i++)
-    {
-        pieceSquares[i] = pieceAnchor + TetrominoData::GetPieceMap(piece, pieceRot, i);
+BoardAnalysis analyze_board (
+    Board* current_board, int piece_anchor, int piece, int piece_rot
+) {
+    int piece_squares[4] = {};
+    int square_idx = 0;
+    for (int i = 0; i < 4; i++) {
+        piece_squares[i] = piece_anchor + 
+            tetromino_data::get_piece_map(piece, piece_rot, i);
     }
 
     BoardAnalysis vals = {};
-    vals.highestPoint = currentBoard->GetHighestRow();
-    if (vals.highestPoint > Board::Row(pieceAnchor))
-        vals.highestPoint = Board::Row(pieceAnchor);
+    vals.highest_point = current_board->get_highest_row();
+    if (vals.highest_point > Board::row(piece_anchor))
+        vals.highest_point = Board::row(piece_anchor);
 
 
-    int columnHeights[Board::WIDTH] = {};
-    int columnHoles[Board::WIDTH] = {};
+    int column_heights[Board::WIDTH] = {};
+    int column_holes[Board::WIDTH] = {};
 
     // Fiill all heights with the "lowest" square
-    std::fill_n(columnHeights, Board::WIDTH, Board::HEIGHT);
+    std::fill_n(column_heights, Board::WIDTH, Board::HEIGHT);
 
-    for (int y = vals.highestPoint; y < Board::HEIGHT; y++)
-    {
-        bool lineComplete = true;
-        for (int x = 0; x < Board::WIDTH; x++)
-        {
-            // Consider the square "filled" if there's something there or the current piece fills it
-            bool pieceAtIdx = squareIdx < 4 && pieceSquares[squareIdx] == Board::ConvertIdx(x, y);
-            if (pieceAtIdx)
-                squareIdx++;
+    for (int y = vals.highest_point; y < Board::HEIGHT; y++) {
+        bool line_complete = true;
+        for (int x = 0; x < Board::WIDTH; x++) {
+            // Consider the square "filled" if there's something 
+            // there or the current piece fills it
+            bool piece_at_idx = (
+                square_idx < 4 && 
+                piece_squares[square_idx] == Board::convert_idx(x, y)
+            );
 
-            bool squareFilled = pieceAtIdx || currentBoard->GetSquare(x, y) > 0;
+            if (piece_at_idx)
+                square_idx++;
+
+            bool square_filled = (
+                piece_at_idx ||
+                current_board->get_square(x, y) > 0
+            );
 
             // Going from top down, so first filled square is the highest
-            if (squareFilled && columnHeights[x] == Board::HEIGHT)
-                columnHeights[x] = y;
+            if (square_filled && column_heights[x] == Board::HEIGHT)
+                column_heights[x] = y;
 
-            if (squareFilled)
-            {
-                vals.aggregateHeight++;
-            }
-            else
-            {
+            if (square_filled) {
+                vals.aggregate_height++;
+            } else {
                 // If this isn't the first square in the column and isn't filled
-                if (columnHeights[x] < 24)
-                {
-                    columnHoles[x]++;
-                    vals.blocksOverHoles += (y-columnHeights[x]) - columnHoles[x];
+                if (column_heights[x] < 24) {
+                    column_holes[x]++;
+                    vals.blocks_over_holes += (y-column_heights[x]) 
+                        - column_holes[x];
                 }
-                lineComplete = false;
+                line_complete = false;
             }
         }
-        if (lineComplete)
-            vals.completeLines++;
+        if (line_complete)
+            vals.complete_lines++;
     }
 
-    for (int holes : columnHoles)
-    {
-        vals.holesCount += holes;
+    for (int holes : column_holes) {
+        vals.holes_count += holes;
     }
-    vals.heightStdDev = GetHeightStdDev(columnHeights);
-    vals.highestPoint = Board::HEIGHT-vals.highestPoint; // Make higher number -> higher on board
+    vals.height_std_dev = get_height_std_dev(column_heights);
+    // Make higher number -> higher on board
+    vals.highest_point = Board::HEIGHT-vals.highest_point; 
 
     return vals;
 }
 
-bool ValidStart (Board* currentBoard, uint8_t piece, uint16_t anchor, uint8_t rot)
-{
-    for (int i = 0; i < 4; i++)
-    {
-        uint8_t squareIndex = anchor + TetrominoData::GetPieceMap(piece, rot, i);
-        if (currentBoard->GetSquare(squareIndex) > 0)
-        {
+bool valid_start (
+    Board* current_board, uint8_t piece, uint16_t anchor, uint8_t rot
+) {
+    for (int i = 0; i < 4; i++) {
+        uint8_t square_index = anchor + 
+            tetromino_data::get_piece_map(piece, rot, i);
+        if (current_board->get_square(square_index) > 0) {
             return false;
         }
     }
@@ -128,83 +128,90 @@ bool ValidStart (Board* currentBoard, uint8_t piece, uint16_t anchor, uint8_t ro
 
 /**
  * Gets all possible "hard drop" moves on the current board
- * @param currentBoard The current board state.
+ * @param current_board The current board state.
  * This method does not modify the Board object.
- * @param currentPiece The current falling piece.
- * @param heldPiece The held piece or the next piece up if no piece is held.
- * @return A vec of Move objects, each with an ending anchor, rotation, and if it includes a hold
+ * @param current_piece The current falling piece.
+ * @param held_piece The held piece or the next piece up if no piece is held.
+ * @return A vec of Move objects, each with an ending anchor, 
+ * rotation, and if it includes a hold
  */
-std::vector<Move> GenerateMoves (Board* currentBoard, uint8_t currentPiece, uint8_t heldPiece)
-{
-    std::vector<Move> moveList;
-    for (int8_t piece : {currentPiece, heldPiece})
-    {
-        uint8_t numRot;
-        switch (piece)
-        {
+std::vector<Move> generate_moves (
+    Board* current_board, uint8_t current_piece, uint8_t held_piece
+) {
+    std::vector<Move> move_list;
+    for (int8_t piece : {current_piece, held_piece}) {
+        uint8_t num_rot;
+        switch (piece) {
             case O_PIECE:
-                numRot = 1;
+                num_rot = 1;
                 break;
             case S_PIECE:
             case Z_PIECE:
             case I_PIECE:
-                numRot = 2;
+                num_rot = 2;
                 break;
             default:
-                numRot = 4;
+                num_rot = 4;
                 break;
         }
-        for (int rot = 0; rot < numRot; rot++)
-        {
-            TetrominoData::Bounds pieceBounds = TetrominoData::GetPieceBounds(piece, rot);
-            for (uint8_t startPos = pieceBounds.leftBound + Board::BUFFER_SQUARES; startPos <= pieceBounds.rightBound +  Board::BUFFER_SQUARES; startPos++)
-            {
-                if (!ValidStart(currentBoard, piece, startPos, rot))
+        for (int rot = 0; rot < num_rot; rot++) {
+            tetromino_data::Bounds piece_bounds =
+                tetromino_data::get_piece_bounds(piece, rot);
+            for (
+                uint8_t start_pos = piece_bounds.left_bound + 
+                    Board::BUFFER_SQUARES;
+                start_pos <= piece_bounds.right_bound + Board::BUFFER_SQUARES;
+                start_pos++
+            ) {
+                if (!valid_start(current_board, piece, start_pos, rot))
                     continue;
-                uint16_t endingPos = currentBoard->GetGhost(piece, startPos, rot);
-                moveList.push_back({
-                    .position = endingPos,
+                uint16_t ending_pos = current_board->get_ghost(
+                    piece, start_pos, rot
+                );
+                move_list.push_back({
+                    .position = ending_pos,
                     .rotation = rot,
-                    .hold = piece == heldPiece
+                    .hold = piece == held_piece
                 });
             }
         }
-        if (currentPiece == heldPiece)
+        if (current_piece == held_piece)
             break;
     }
 
-    return moveList;
+    return move_list;
 }
 
-Move BestMove (Board* currentBoard, Weights& weights)
-{
-    uint8_t currentPiece = currentBoard->GetFallingPiece();
-    uint8_t heldPiece = currentBoard->GetHeldPiece();
+Move best_move (Board* current_board, Weights& weights) {
+    uint8_t current_piece = current_board->get_falling_piece();
+    uint8_t held_piece = current_board->get_held_piece();
     // Treat the next piece up as the held piece if nothing is held
-    if (heldPiece == 0)
-        heldPiece = currentBoard->NthPiece(0);
+    if (held_piece == 0)
+        held_piece = current_board->nth_piece(0);
 
-    std::vector<Move> moveList = GenerateMoves(currentBoard, currentPiece, heldPiece);
-    Move bestMove = {};
-    double bestScore = -DBL_MAX;
+    std::vector<Move> move_list = generate_moves(
+        current_board, current_piece, held_piece
+    );
+    Move best_move = {};
+    double best_score = -DBL_MAX;
 
-    for (Move& move : moveList)
-    {
-        int piece = move.hold ? heldPiece : currentPiece;
-        BoardAnalysis analysis = AnalyzeBoard(currentBoard, move.position, piece, move.rotation);
+    for (Move& move : move_list) {
+        int piece = move.hold ? held_piece : current_piece;
+        BoardAnalysis analysis = analyze_board(
+            current_board, move.position, piece, move.rotation
+        );
 
-        double score = analysis.holesCount * weights.holesCount +
-                       analysis.aggregateHeight * weights.aggregateHeight +
-                       analysis.completeLines * weights.completeLines +
-                       analysis.heightStdDev * weights.heightStdDev +
-                       analysis.highestPoint * weights.highestPoint +
-                       analysis.blocksOverHoles * weights.blocksOverHoles;
-        if (score > bestScore)
-        {
-            bestScore = score;
-            bestMove = move;
+        double score = analysis.holes_count * weights.holes_count +
+                       analysis.aggregate_height * weights.aggregate_height +
+                       analysis.complete_lines * weights.complete_lines +
+                       analysis.height_std_dev * weights.height_std_dev +
+                       analysis.highest_point * weights.highest_point +
+                       analysis.blocks_over_holes * weights.blocks_over_holes;
+        if (score > best_score) {
+            best_score = score;
+            best_move = move;
         }
     }
 
-    return bestMove;
+    return best_move;
 }

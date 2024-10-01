@@ -1,51 +1,47 @@
 #include <SDL3/SDL.h>
 
-#include "HumanPlayer.h"
+#include "HumanPlayer.hpp"
 
-bool HumanPlayer::PersistentKey (const bool* keystate, KeyHandler& k)
-{
+bool HumanPlayer::persistent_key (const bool* keystate, KeyHandler& k) {
     bool ret = false;
     if (keystate[k.scancode])
     {
-        if (k.currentDelay == 0)
+        if (k.current_delay == 0)
         {
             ret = true;
-            k.inputCount++;
+            k.input_count++;
         }
         SDL_Delay(1); // Delay one millisecond for framerate-independence
-        k.currentDelay++;
-        if (k.inputCount == 1)
+        k.current_delay++;
+        if (k.input_count == 1)
         {
-            if (k.currentDelay >= k.firstDelay)
-                k.currentDelay = 0;
+            if (k.current_delay >= k.first_delay)
+                k.current_delay = 0;
         }
-        else if (k.currentDelay >= k.delay)
-            k.currentDelay = 0;
+        else if (k.current_delay >= k.delay)
+            k.current_delay = 0;
     }
     else
     {
-        k.currentDelay = 0;
-        k.inputCount = 0;
+        k.current_delay = 0;
+        k.input_count = 0;
     }
     return ret;
 }
 
-Input HumanPlayer::UserInputFromKeys (const bool* keystate)
-{
-    Input input =
-    {
-        .moveLeft           =   PersistentKey(keystate, m_moveLeft),
-        .moveRight          =   PersistentKey(keystate, m_moveRight),
-        .rotClockwise       =   PersistentKey(keystate, m_rotClockwise),
-        .rotCountClockwise  =   PersistentKey(keystate, m_rotCountClockwise),
-        .softDrop           =   PersistentKey(keystate, m_softDrop),
+Input HumanPlayer::user_input_from_keys (const bool* keystate) {
+    Input input = {
+        .move_left           = persistent_key(keystate, m_move_left),
+        .move_right          = persistent_key(keystate, m_move_right),
+        .rot_clockwise       = persistent_key(keystate, m_rot_clockwise),
+        .rot_count_clockwise = persistent_key(keystate, m_rot_count_clockwise),
+        .soft_drop           = persistent_key(keystate, m_soft_drop),
     };
 
 
     return input;
 }
 
-Input HumanPlayer::GenInput([[maybe_unused]] Board* board)
-{
-    return UserInputFromKeys(SDL_GetKeyboardState(nullptr));
+Input HumanPlayer::gen_input([[maybe_unused]] Board* board) {
+    return user_input_from_keys(SDL_GetKeyboardState(nullptr));
 }

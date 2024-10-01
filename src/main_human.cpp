@@ -1,17 +1,15 @@
 ﻿#include <iostream>
 
-#include "app/App.h"
+#include "app/App.hpp"
 
-int main (int argc, char* argv[])
-{
+int main (int argc, char** argv) {
     App app;
 
-    if (!app.Init())
-    {
+    if (!app.init()) {
         std::cout << "ERR: Could not initialize" << std::endl;
         return 1;
     }
 
-    app.Run();
+    app.run();
     return 0;
 }

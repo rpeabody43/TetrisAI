@@ -5,13 +5,12 @@
 
 #include <SDL3/SDL.h>
 
-#include "../game/Board.h"
-#include "../ai/Player.h"
-#include "gfx/Window.h"
+#include "../game/Board.hpp"
+#include "../ai/Player.hpp"
+#include "gfx/Window.hpp"
 
 /* Controls the game loop. */
-class App
-{
+class App {
 public:
     /**
      * Creates a new App with user input.
@@ -31,19 +30,19 @@ public:
     explicit App (Player* player);
 
     /* Resets the game state. */
-    void NewGame ();
+    void new_game ();
 
     /**
      * Initializes the Window part of the App.
      * @return True if everything goes well, false otherwise.
      */
-    bool Init ();
+    bool init ();
 
     /**
      * Starts running the game.
      * Only exits when the game is closed by the user.
      */
-    void Run ();
+    void run ();
 
     /**
      * Destructor: cleans stuff up.
@@ -52,9 +51,9 @@ public:
 
 private:
 
-    std::default_random_engine m_randomGenerator;
-    Board* m_pBoard;
+    std::default_random_engine m_randomgen;
+    Board* m_board;
     GameWindow m_window;
-    bool m_userInput;
-    Player* m_pPlayer;
+    bool m_user_input;
+    Player* m_player;
 };

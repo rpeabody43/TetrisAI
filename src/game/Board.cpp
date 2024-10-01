@@ -2,461 +2,444 @@
 #include <algorithm>
 #include <random>
 
-#include "Board.h"
+#include "Board.hpp"
 #include "tetrominoes.hpp"
 
-uint16_t Board::ConvertIdx (uint8_t x, uint8_t y)
-{
+uint16_t Board::convert_idx (uint8_t x, uint8_t y) {
     return y * WIDTH + x;
 }
 
-uint8_t Board::Row (uint16_t idx)
-{
+uint8_t Board::row (uint16_t idx) {
     return idx / WIDTH;
 }
 
-uint8_t Board::Col (uint16_t idx)
-{
+uint8_t Board::col (uint16_t idx) {
     return idx % WIDTH;
 }
 
-Board::Board (uint16_t fallRate, std::default_random_engine& randomGenerator) // NOLINT(*-msc51-cpp)
+Board::Board (uint16_t fall_rate, std::default_random_engine& random_generator) // NOLINT(*-msc51-cpp)
     : m_gameover(false)
-      , m_ticks(0)
-      , m_lastTicks(0)
-      , m_fallRate(fallRate)
-      , m_fallingPiece(0)
-      , m_fallingPieceRot(0)
-      , m_fallingPieceAnchor(3)
-      , m_board{}
-      , m_bags{}
-      , m_bagIdx(7)
-      , m_heldPiece(0)
-      , m_alreadyHeld(false)
-      , m_currentHighest(HEIGHT)
-      , m_score(0)
-      , m_linesCleared(0)
-      , m_randomGenerator(randomGenerator)
-{
+    , m_ticks(0)
+    , m_last_ticks(0)
+    , m_fall_rate(fall_rate)
+    , m_falling_piece(0)
+    , m_falling_piece_rot(0)
+    , m_falling_piece_anchor(3)
+    , m_board{}
+    , m_bags{}
+    , m_bag_idx(7)
+    , m_held_piece(0)
+    , m_already_held(false)
+    , m_current_highest(HEIGHT)
+    , m_score(0)
+    , m_lines_cleared(0)
+    , m_randomgen(random_generator) {
     // Initialize each bag in sequential order, then shuffle
-    for (auto& bag: m_bags)
-    {
+    for (auto& bag: m_bags) {
         for (int j = 0; j < 7; j++)
             bag[j] = j + 1;
-        std::shuffle(std::begin(bag), std::end(bag), m_randomGenerator);
+        std::shuffle(std::begin(bag), std::end(bag), m_randomgen);
     }
 }
 
-uint8_t Board::GetPieceMap (uint8_t rot, uint8_t n) const
-{
-    uint8_t ret = TetrominoData::GetPieceMap(m_fallingPiece, rot, n);
+uint8_t Board::get_piece_map (uint8_t rot, uint8_t n) const {
+    uint8_t ret = tetromino_data::get_piece_map(m_falling_piece, rot, n);
     return ret;
 }
 
-uint8_t Board::NthPiece (uint8_t n) const
-{
-    uint8_t idx = m_bagIdx + n;
+uint8_t Board::nth_piece (uint8_t n) const {
+    uint8_t idx = m_bag_idx + n;
     if (idx >= sizeof(m_bags))
         idx -= sizeof(m_bags);
     return m_bags[idx / 7][idx % 7];
 }
 
-uint8_t Board::GetPieceNum () const
-{
-    return m_bagIdx;
+uint8_t Board::get_piece_num () const {
+    return m_bag_idx;
 }
 
-void Board::NextPiece ()
-{
+void Board::next_piece () {
     // If reached the end of the current piece bag, shuffle it and move onto the next;
-    if ((m_bagIdx + 1) % 7 == 0)
-    {
-        std::shuffle(std::begin(m_bags[m_bagIdx / 7]), std::end(m_bags[m_bagIdx / 7]), m_randomGenerator);
+    if ((m_bag_idx + 1) % 7 == 0) {
+        std::shuffle(
+            std::begin(m_bags[m_bag_idx / 7]), 
+            std::end(m_bags[m_bag_idx / 7]), m_randomgen
+        );
     }
-    m_bagIdx++;
-    if (m_bagIdx >= sizeof(m_bags))
-        m_bagIdx = 0;
+    m_bag_idx++;
+    if (m_bag_idx >= sizeof(m_bags))
+        m_bag_idx = 0;
 }
 
-void Board::NewPiece ()
-{
-    int piece = NthPiece(0);
-    NewPiece(piece);
+void Board::new_piece () {
+    int piece = nth_piece(0);
+    new_piece(piece);
 }
 
 
-void Board::NewPiece (uint8_t piece)
-{
-    m_fallingPiece = piece;
-    m_fallingPieceRot = 0;
+void Board::new_piece (uint8_t piece) {
+    m_falling_piece = piece;
+    m_falling_piece_rot = 0;
     // If the highest point is just below the vanish zone
     // Spawn the piece in the vanish zone
-    if (m_currentHighest <= VANISH_ZONE_HEIGHT + 2)
-    {
-        m_fallingPieceAnchor = ConvertIdx(3, BUFFER_HEIGHT);
-    }
-    // Otherwise spawn in visible space
-    else
-    {
-        m_fallingPieceAnchor = ConvertIdx(3, VANISH_ZONE_HEIGHT + BUFFER_HEIGHT);
+    if (m_current_highest <= VANISH_ZONE_HEIGHT + 2) {
+        m_falling_piece_anchor = convert_idx(3, BUFFER_HEIGHT);
+    } else { // Otherwise spawn in visible space
+        m_falling_piece_anchor = convert_idx(3, VANISH_ZONE_HEIGHT + BUFFER_HEIGHT);
     }
 
     // Move up in the bag
-    NextPiece();
+    next_piece();
 
-    uint16_t start = m_fallingPieceAnchor;
-    // Pieces spawn on top of other pieces
+    uint16_t start = m_falling_piece_anchor;
+    // _pieces spawn on top of other pieces
     bool blockOut = false;
 
     // Set all falling piece squares to the negative value of the piece
-    for (int i = 3; i >= 0; i--)
-    {
-        uint16_t newIdx = start + GetPieceMap(m_fallingPieceRot, i);
+    for (int i = 3; i >= 0; i--) {
+        uint16_t newIdx = start + get_piece_map(m_falling_piece_rot, i);
 
-        if (m_board[newIdx] == 0)
-        {
-            m_board[newIdx] = -m_fallingPiece;
+        if (m_board[newIdx] == 0) {
+            m_board[newIdx] = -m_falling_piece;
+        } else {
+            blockOut = true;
         }
-        else blockOut = true;
     }
 
     m_gameover = blockOut;
 }
 
-void Board::HoldPiece ()
-{
-    if (m_alreadyHeld) return;
-    for (int i = 3; i >= 0; i--)
-    {
-        int idx = m_fallingPieceAnchor + GetPieceMap(m_fallingPieceRot, i);
+void Board::hold_piece () {
+    if (m_already_held) return;
+    for (int i = 3; i >= 0; i--) {
+        int idx = m_falling_piece_anchor + get_piece_map(m_falling_piece_rot, i);
         m_board[idx] = 0;
     }
 
-    int prevHeldPiece = m_heldPiece;
-    m_heldPiece = m_fallingPiece;
-    if (prevHeldPiece == 0)
-        NewPiece();
+    int prev_held_piece = m_held_piece;
+    m_held_piece = m_falling_piece;
+    if (prev_held_piece == 0)
+        new_piece();
     else
-        NewPiece(prevHeldPiece);
-    m_alreadyHeld = true;
+        new_piece(prev_held_piece);
+    m_already_held = true;
 }
 
-void Board::ClearLines ()
-{
-    const uint16_t start = m_fallingPieceAnchor;
-    const uint8_t startRow = Row(start);
-    uint8_t linesCleared = 0;
+void Board::clear_lines () {
+    const uint16_t start = m_falling_piece_anchor;
+    const uint8_t start_row = row(start);
+    uint8_t lines_cleared = 0;
 
     // Copy lines down to cover cleared lines
-    for (int y = startRow; y < std::min(startRow + 5, (int) HEIGHT); y++)
-    {
-        bool lineComplete = true;
-        for (int x = 0; x < 10 && lineComplete; x++)
-        {
-            if (GetSquare(x, y) == 0)
-                lineComplete = false;
+    for (int y = start_row; y < std::min(start_row + 5, (int) HEIGHT); y++) {
+        bool line_complete = true;
+        for (int x = 0; x < 10 && line_complete; x++) {
+            if (get_square(x, y) == 0)
+                line_complete = false;
         }
 
-        if (lineComplete)
-        {
-            linesCleared++;
+        if (line_complete) {
+            lines_cleared++;
 
-            for (int tempY = y - 1; tempY >= startRow - 1; tempY--)
-            {
-                for (int tempX = 0; tempX < 10; tempX++)
-                {
-                    int currentIdx = ConvertIdx(tempX, tempY);
-                    int copyIdx = ConvertIdx(tempX, tempY + 1);
+            for (int temp_y = y - 1; temp_y >= start_row - 1; temp_y--) {
+                for (int temp_x = 0; temp_x < 10; temp_x++) {
+                    int currentIdx = convert_idx(temp_x, temp_y);
+                    int copyIdx = convert_idx(temp_x, temp_y + 1);
                     m_board[copyIdx] = m_board[currentIdx];
                 }
             }
         }
     }
 
-    if (linesCleared == 0) return;
+    if (lines_cleared == 0) return;
     // Copy down the rest of the lines to
-    for (int tempY = startRow - 1; tempY >= 0; tempY--)
-    {
-        for (int tempX = 0; tempX < 10; tempX++)
-        {
-            uint16_t currentIdx = ConvertIdx(tempX, tempY);
-            uint16_t copyIdx = ConvertIdx(tempX, tempY + linesCleared);
-            m_board[copyIdx] = m_board[currentIdx];
+    for (int temp_y = start_row - 1; temp_y >= 0; temp_y--) {
+        for (int temp_x = 0; temp_x < 10; temp_x++) {
+            uint16_t current_idx = convert_idx(temp_x, temp_y);
+            uint16_t copy_idx = convert_idx(temp_x, temp_y + lines_cleared);
+            m_board[copy_idx] = m_board[current_idx];
         }
     }
 
     // Fill the top with zeroes
-    for (int buffer = 0; buffer < ConvertIdx(9, linesCleared); buffer++)
-    {
+    for (int buffer = 0; buffer < convert_idx(9, lines_cleared); buffer++) {
         m_board[buffer] = 0;
     }
 
     // Since y starts from the top, currentHighest needs to be increased
-    m_currentHighest += linesCleared;
+    m_current_highest += lines_cleared;
 
-    m_linesCleared += linesCleared;
-    uint16_t scoreAdd;
-    switch (linesCleared)
-    {
+    m_lines_cleared += lines_cleared;
+    uint16_t score_add;
+    switch (lines_cleared) {
         default:
-            scoreAdd = 0;
+            score_add = 0;
             break;
         case 1:
-            scoreAdd = 100;
+            score_add = 100;
             break;
         case 2:
-            scoreAdd = 300;
+            score_add = 300;
             break;
         case 3:
-            scoreAdd = 500;
+            score_add = 500;
             break;
         case 4:
-            scoreAdd = 800;
+            score_add = 800;
     }
-    m_score += scoreAdd*m_linesCleared/10;
+    m_score += score_add*m_lines_cleared/10;
 }
 
-void Board::Fall ()
-{
-    m_lastTicks = m_ticks;
+void Board::fall () {
+    m_last_ticks = m_ticks;
 
-    bool freeze = !ValidMove(0, 10);
-    if (freeze)
-    {
-        MovePiece(0, 0, true);
-        ClearLines();
-        NewPiece();
+    bool freeze = !valid_move(0, 10);
+    if (freeze) {
+        move_piece(0, 0, true);
+        clear_lines();
+        new_piece();
         return;
     }
 
-    UpdateFallingPiece(0, 10);
+    update_falling_piece(0, 10);
 }
 
-uint16_t Board::GetGhost ()
-{
-    return GetGhost(m_fallingPiece, m_fallingPieceAnchor, m_fallingPieceRot);
+uint16_t Board::get_ghost () {
+    return get_ghost(
+        m_falling_piece, m_falling_piece_anchor, m_falling_piece_rot
+    );
 }
 
-uint16_t Board::GetGhost (uint8_t piece, uint16_t anchor, uint8_t currentRot)
-{
+uint16_t Board::get_ghost (
+    uint8_t piece, uint16_t anchor, uint8_t current_rot
+) {
     uint16_t delta = 0;
-    while (ValidMove(piece, anchor, currentRot, 0, delta + Board::WIDTH))
+    while (valid_move(piece, anchor, current_rot, 0, delta + Board::WIDTH))
         delta += Board::WIDTH;
     return anchor + delta;
 }
 
-void Board::HardDrop ()
-{
-    uint16_t moveDelta = GetGhost() - m_fallingPieceAnchor;
-    MovePiece(0, moveDelta, true);
-    ClearLines();
-    NewPiece();
+void Board::hard_drop () {
+    uint16_t move_delta = get_ghost() - m_falling_piece_anchor;
+    move_piece(0, move_delta, true);
+    clear_lines();
+    new_piece();
 }
 
-bool Board::ValidMove (int8_t rotDelta, int16_t moveDelta)
-{
-    return ValidMove(m_fallingPiece, m_fallingPieceAnchor, m_fallingPieceRot, rotDelta, moveDelta);
+bool Board::valid_move (int8_t rot_delta, int16_t move_delta) {
+    return valid_move(
+        m_falling_piece, m_falling_piece_anchor, m_falling_piece_rot,
+        rot_delta, move_delta
+    );
 }
 
-bool Board::ValidMove (uint8_t piece, uint16_t anchor, uint8_t currentRot, int8_t rotDelta, int16_t moveDelta)
-{
-    for (int i = 0; i < 4; i++)
-    {
-        int oldPos = anchor + TetrominoData::GetPieceMap(piece, currentRot, i);
-        int newPos = anchor + moveDelta + TetrominoData::GetPieceMap(piece, currentRot + rotDelta, i);
+bool Board::valid_move (
+    uint8_t piece, uint16_t anchor, uint8_t current_rot, 
+    int8_t rot_delta, int16_t move_delta
+) {
+    for (int i = 0; i < 4; i++) {
+        int old_pos = anchor + tetromino_data::get_piece_map(piece, current_rot, i);
+        int new_pos = anchor + move_delta + tetromino_data::get_piece_map(piece, current_rot + rot_delta, i);
         // If it's an index error on either side
-        if (newPos >= TOTAL_SIZE || newPos < 0)
+        if (new_pos >= TOTAL_SIZE || new_pos < 0)
             return false;
         // If it's a nonempty square, that also isn't the falling piece itself
         // The falling piece is stored as negative numbers
-        if (m_board[newPos] != 0 && m_board[newPos] != -m_fallingPiece)
+        if (m_board[new_pos] != 0 && m_board[new_pos] != -m_falling_piece)
             return false;
         // If it hit the side of the board
-        int oldCol = Col(oldPos);
-        int newCol = Col(newPos);
-        bool closeToEdge = ((oldCol <= 2) && (newCol >= 8)) || ((oldCol >= 8) && (newCol <= 2));
+        int old_col = col(old_pos);
+        int new_col = col(new_pos);
+        bool closeToEdge = ((old_col <= 2) && (new_col >= 8)) || ((old_col >= 8) && (new_col <= 2));
         if (closeToEdge)
             return false;
     }
     return true;
 }
 
-void Board::MovePiece (int8_t rotDelta, int16_t moveDelta, bool freeze)
-{
-    for (int i = 3; i >= 0; i--)
-    {
-        // Get the block with the delta from the map array
-        int absidxOld = m_fallingPieceAnchor + GetPieceMap(m_fallingPieceRot, i);
-        m_board[absidxOld] = 0;
+void Board::move_piece (int8_t rot_delta, int16_t move_delta, bool freeze) {
+    for (int i = 3; i >= 0; i--) {
+        // get the block with the delta from the map array
+        int abs_idx_old = m_falling_piece_anchor + 
+            get_piece_map(m_falling_piece_rot, i);
+        m_board[abs_idx_old] = 0;
     }
-    for (int i = 3; i >= 0; i--)
-    {
-        uint16_t absidxNew = m_fallingPieceAnchor + moveDelta + GetPieceMap(m_fallingPieceRot + rotDelta, i);
-        m_board[absidxNew] = freeze ? m_fallingPiece : -m_fallingPiece;
+    for (int i = 3; i >= 0; i--) {
+        uint16_t abs_idx_new = m_falling_piece_anchor + move_delta + 
+            get_piece_map(m_falling_piece_rot + rot_delta, i);
+        m_board[abs_idx_new] = freeze ? m_falling_piece : -m_falling_piece;
     }
 
-    m_fallingPieceRot += rotDelta;
-    m_fallingPieceAnchor += moveDelta;
+    m_falling_piece_rot += rot_delta;
+    m_falling_piece_anchor += move_delta;
 
-    if (freeze)
-    {
+    if (freeze) {
         // The held piece becomes available when the current falling piece is locked
-        m_alreadyHeld = false;
+        m_already_held = false;
 
         // We use > because y is from top down
-        if (m_currentHighest > Row(m_fallingPieceAnchor))
-            m_currentHighest = Row(m_fallingPieceAnchor);
+        if (m_current_highest > row(m_falling_piece_anchor))
+            m_current_highest = row(m_falling_piece_anchor);
 
         // Lock out
-        if (m_fallingPieceAnchor + GetPieceMap(m_fallingPieceRot, 3) < ConvertIdx(0, VANISH_ZONE_HEIGHT))
-        {
+        if (
+            m_falling_piece_anchor + get_piece_map(m_falling_piece_rot, 3) 
+            < convert_idx(0, VANISH_ZONE_HEIGHT)
+        ) {
             m_gameover = true;
         }
     }
 }
 
-void Board::UpdateFallingPiece (int8_t rotDelta, int16_t moveDelta)
+void Board::update_falling_piece (int8_t rot_delta, int16_t move_delta)
 {
     // Do movement first because we don't want it to stack with wall kicks
-    if (ValidMove(0, moveDelta))
-        MovePiece(0, moveDelta, false);
+    if (valid_move(0, move_delta))
+        move_piece(0, move_delta, false);
 
-    // Make sure m_fallingPieceRot is between 0 and 3
-    while (m_fallingPieceRot + rotDelta < 0)
-        rotDelta += 4;
-    while (m_fallingPieceRot + rotDelta > 3)
-        rotDelta -= 4;
+    // Make sure m_falling_piece_rot is between 0 and 3
+    while (m_falling_piece_rot + rot_delta < 0)
+        rot_delta += 4;
+    while (m_falling_piece_rot + rot_delta > 3)
+        rot_delta -= 4;
 
-    int wallKickTable = GetWallKickIdx(m_fallingPieceRot, m_fallingPieceRot + rotDelta);
+    int wall_kick_table = get_wall_kick_idx(
+        m_falling_piece_rot, 
+        m_falling_piece_rot + rot_delta
+    );
     int i = 0;
     // O pieces should not be rotated / wall kicked at all
-    if (m_fallingPiece == O_PIECE || rotDelta == 0)
+    if (m_falling_piece == O_PIECE || rot_delta == 0) {
         return;
-        // Loop through the wall kicks at this rotation until one works, or they all fail
-    else
-    {
-        // The I piece has a different table of wall kicks per SRS
-        if (m_fallingPiece == I_PIECE)
-        {
-            while (i < 5 && !ValidMove(rotDelta, TetrominoData::I_WALL_KICKS[wallKickTable][i]))
+    } else {
+        // Loop through the wall kicks at this rotation until one works, 
+        // or they all fail
+        if (m_falling_piece == I_PIECE) {
+            // The I piece has a different table of wall kicks per SRS
+            while (
+                i < 5 && !valid_move(
+                    rot_delta, tetromino_data::I_WALL_KICKS[wall_kick_table][i]
+                )
+            ) {
                 i++;
-        }
-        else
-        {
-            while (i < 5 && !ValidMove(rotDelta, TetrominoData::WALL_KICKS[wallKickTable][i]))
+            }
+        } else {
+            while (
+                i < 5 && !valid_move(
+                    rot_delta, tetromino_data::WALL_KICKS[wall_kick_table][i]
+                )
+            ) {
                 i++;
+            }
         }
     }
 
-    if (i != 5)
-    {
-        int8_t wallKick;
-        if (m_fallingPiece == I_PIECE)
-            wallKick = TetrominoData::I_WALL_KICKS[wallKickTable][i];
+    if (i != 5) {
+        int8_t wall_kick;
+        if (m_falling_piece == I_PIECE) 
+            wall_kick = tetromino_data::I_WALL_KICKS[wall_kick_table][i];
         else
-            wallKick = TetrominoData::WALL_KICKS[wallKickTable][i];
-        MovePiece(rotDelta, wallKick, false);
+            wall_kick = tetromino_data::WALL_KICKS[wall_kick_table][i];
+        move_piece(rot_delta, wall_kick, false);
     }
 }
 
-uint8_t Board::GetWallKickIdx (uint8_t startRot, uint8_t endRot)
+uint8_t Board::get_wall_kick_idx (uint8_t start_rot, uint8_t end_rot)
 {
-    if (startRot == 3 && endRot == 0)
+    if (start_rot == 3 && end_rot == 0)
         return 6;
-    else if (startRot == 0 && endRot == 3)
+    else if (start_rot == 0 && end_rot == 3)
         return 7;
 
-    int dir = endRot - startRot;
-    int ret = startRot + endRot;
+    int dir = end_rot - start_rot;
+    int ret = start_rot + end_rot;
     if (dir == 1)
         ret -= 1;
     return ret;
 }
 
-[[maybe_unused]] uint16_t Board::GetFallingPieceAnchor () const
+[[maybe_unused]] uint16_t Board::get_falling_piece_anchor () const
 {
-    return m_fallingPieceAnchor;
+    return m_falling_piece_anchor;
 }
 
-void Board::Update (Input& input, uint32_t ticks)
+void Board::update (Input& input, uint32_t ticks)
 {
-    // m_fallingPiece is only assigned 0 at new game
+    // m_falling_piece is only assigned 0 at new game
     // every other piece's number is > 0
-    if (m_fallingPiece == 0)
-    {
-        NewPiece();
+    if (m_falling_piece == 0) {
+        new_piece();
         return;
     }
     if (m_gameover) return;
     m_ticks = ticks;
-    if (m_ticks - m_lastTicks >= m_fallRate)
-    {
-        Fall();
+    if (m_ticks - m_last_ticks >= m_fall_rate) {
+        fall();
     }
 
-    int16_t moveDelta = 0;
-    int8_t rotDelta = 0;
+    int16_t move_delta = 0;
+    int8_t rot_delta = 0;
 
-    if (input.moveLeft)
-        moveDelta -= 1;
-    if (input.moveRight)
-        moveDelta += 1;
-    if (input.softDrop)
-        Fall();
-    if (input.rotClockwise)
-        rotDelta += 1;
-    if (input.rotCountClockwise)
-        rotDelta -= 1;
-    if (input.hardDrop)
-        HardDrop();
-    if (input.holdPiece)
-        HoldPiece();
+    if (input.move_left)
+        move_delta -= 1;
+    if (input.move_right)
+        move_delta += 1;
+    if (input.soft_drop)
+        fall();
+    if (input.rot_clockwise)
+        rot_delta += 1;
+    if (input.rot_count_clockwise)
+        rot_delta -= 1;
+    if (input.hard_drop)
+        hard_drop();
+    if (input.hold_piece)
+        hold_piece();
 
-    UpdateFallingPiece(rotDelta, moveDelta);
+    update_falling_piece(rot_delta, move_delta);
 
 }
 
-uint8_t Board::GetFallingPiece () const
+uint8_t Board::get_falling_piece () const
 {
-    return m_fallingPiece;
+    return m_falling_piece;
 }
 
-uint8_t Board::GetFallingPieceRot () const
+uint8_t Board::get_falling_piece_rot () const
 {
-    return m_fallingPieceRot;
+    return m_falling_piece_rot;
 }
 
-int8_t Board::GetSquare (uint8_t x, uint8_t y) const
+int8_t Board::get_square (uint8_t x, uint8_t y) const
 {
-    return m_board[ConvertIdx(x, y)];
+    return m_board[convert_idx(x, y)];
 }
 
-int8_t Board::GetSquare (uint16_t idx) const
+int8_t Board::get_square (uint16_t idx) const
 {
     return m_board[idx];
 }
 
-uint8_t Board::GetHeldPiece () const
+uint8_t Board::get_held_piece () const
 {
-    return m_heldPiece;
+    return m_held_piece;
 }
 
-uint8_t Board::GetHighestRow () const
+uint8_t Board::get_highest_row () const
 {
-    return m_currentHighest;
+    return m_current_highest;
 }
 
-bool Board::GameOver () const
+bool Board::game_over () const
 {
     return m_gameover;
 }
 
-size_t Board::GetScore () const
+size_t Board::get_score () const
 {
     return m_score;
 }
 
-size_t Board::GetLinesCleared () const
+size_t Board::get_lines_cleared () const
 {
-    return m_linesCleared;
+    return m_lines_cleared;
 }

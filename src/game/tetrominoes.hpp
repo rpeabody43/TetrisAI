@@ -10,7 +10,7 @@
 #define Z_PIECE 6
 #define T_PIECE 7
 
-namespace TetrominoData
+namespace tetromino_data
 {
     // Piece maps, where to place squares relative to a piece's anchor.
     const uint8_t MAPS[7][4][4] =
@@ -45,15 +45,15 @@ namespace TetrominoData
      * @param n The number square to get.
      * @return The square position relative to the anchor.
      */
-    inline uint8_t GetPieceMap (uint8_t piece, uint8_t rot, uint8_t n)
+    inline uint8_t get_piece_map (uint8_t piece, uint8_t rot, uint8_t n)
     {
         return MAPS[piece - 1][rot][n];
     }
 
     struct Bounds
     {
-        int8_t leftBound;
-        int8_t rightBound;
+        int8_t left_bound;
+        int8_t right_bound;
     };
     const Bounds PIECE_BOUNDS[7][4] =
     {
@@ -72,7 +72,7 @@ namespace TetrominoData
      * @param rot What rotation the piece is.
      * @return Bounds, a struct with ints leftBound and rightBound
      */
-    inline Bounds GetPieceBounds (uint8_t piece, uint8_t rot)
+    inline Bounds get_piece_bounds (uint8_t piece, uint8_t rot)
     {
         return PIECE_BOUNDS[piece-1][rot];
     }

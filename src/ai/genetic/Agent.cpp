@@ -1,69 +1,71 @@
-#include "Agent.h"
+#include "Agent.hpp"
 
-Agent::Agent (bool hardDrop, Weights weights)
+Agent::Agent (bool hard_drop, Weights weights)
     : m_weights(weights)
-      , m_workingMove({})
-      , m_currentPieceNum(14)
-      , m_fitness(0)
-      , m_hardDrop(hardDrop)
+    , m_working_move({})
+    , m_current_piece_num(14)
+    , m_fitness(0)
+    , m_hard_drop(hard_drop)
 {}
 
-Input Agent::GenInput (Board* currentBoard)
+Input Agent::gen_input (Board* current_board)
 {
     Input input = {};
-    if (m_currentPieceNum != currentBoard->GetPieceNum())
+    if (m_current_piece_num != current_board->get_piece_num())
     {
-        m_workingMove = BestMove(currentBoard, m_weights);
-        m_currentPieceNum = currentBoard->GetPieceNum();
+        m_working_move = best_move(current_board, m_weights);
+        m_current_piece_num = current_board->get_piece_num();
     }
 
-    if (m_workingMove.hold)
+    if (m_working_move.hold)
     {
-        input.holdPiece = true;
-        m_workingMove.hold = false;
+        input.hold_piece = true;
+        m_working_move.hold = false;
         return input;
     }
 
-    uint8_t currentPiece = currentBoard->GetFallingPiece();
-    uint8_t currentRot = currentBoard->GetFallingPieceRot();
+    uint8_t current_piece = current_board->get_falling_piece();
+    uint8_t current_rot = current_board->get_falling_piece_rot();
 
-    int8_t rotDelta = m_workingMove.rotation - currentRot;
-    if (rotDelta < 0)
+    int8_t rot_delta = m_working_move.rotation - current_rot;
+    if (rot_delta < 0)
     {
-        input.rotCountClockwise = true;
+        input.rot_count_clockwise = true;
     }
-    else if (rotDelta > 0)
+    else if (rot_delta > 0)
     {
-        input.rotClockwise = true;
+        input.rot_clockwise = true;
     }
 
-    uint16_t currentAnchor = currentBoard->GetFallingPieceAnchor();
-    // int8_t rowDelta = Board::Row(m_workingMove.position) - Board::Row(currentAnchor);
-    int8_t offset = TetrominoData::GetPieceBounds(currentPiece, currentRot).leftBound;
+    uint16_t current_anchor = current_board->get_falling_piece_anchor();
+    // int8_t rowDelta = Board::Row(m_working_move.position) - Board::Row(current_anchor);
+    int8_t offset = tetromino_data::get_piece_bounds(
+        current_piece, current_rot
+    ).left_bound;
 
-    uint8_t targetCol = Board::Col(m_workingMove.position - offset);
-    uint8_t currentCol = Board::Col(currentAnchor - offset);
-    int8_t colDelta = targetCol - currentCol;
-    if (colDelta < 0)
+    uint8_t target_col = Board::col(m_working_move.position - offset);
+    uint8_t current_col = Board::col(current_anchor - offset);
+    int8_t col_delta = target_col - current_col;
+    if (col_delta < 0)
     {
-        input.moveLeft = true;
+        input.move_left = true;
     }
-    else if (colDelta > 0)
+    else if (col_delta > 0)
     {
-        input.moveRight = true;
+        input.move_right = true;
     }
     else
     {
-        if (m_hardDrop)
+        if (m_hard_drop)
         {
-            if (rotDelta == 0)
+            if (rot_delta == 0)
             {
-                input.hardDrop = true;
+                input.hard_drop = true;
             }
         }
         else
         {
-            input.softDrop = true;
+            input.soft_drop = true;
         }
     }
 
