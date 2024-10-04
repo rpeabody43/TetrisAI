@@ -4,7 +4,7 @@ Agent::Agent (bool hard_drop, Weights weights)
     : m_weights(weights)
     , m_working_move({})
     , m_current_piece_num(14)
-    , m_fitness(0)
+    , m_fitness()
     , m_hard_drop(hard_drop)
 {}
 
@@ -71,4 +71,12 @@ Input Agent::gen_input (Board* current_board)
 
 
     return input;
+}
+
+void Agent::set_fitness (size_t fitness) {
+    m_fitness = fitness;
+}
+
+size_t Agent::get_fitness () const {
+    return m_fitness;
 }

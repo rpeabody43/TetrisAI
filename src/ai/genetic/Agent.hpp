@@ -16,9 +16,20 @@ public:
     Input gen_input (Board* current_board) override;
 
     /**
-     * Generates the fitness of the agent by playing Tetris
-     */
-    void calc_fitness ();
+    * Set the Agent's fitness score.
+    * @param fitness the fitness core.
+    */
+    void set_fitness (size_t fitness);
+
+    /**
+    * @return The fitness of the Agent.
+    */
+    size_t get_fitness () const;
+
+    /**
+    * @return The weights the Agent uses to make moves.
+    */
+    Weights get_weights () const;
 
 private:
     Weights m_weights;
