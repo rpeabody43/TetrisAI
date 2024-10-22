@@ -80,3 +80,7 @@ void Agent::set_fitness (size_t fitness) {
 size_t Agent::get_fitness () const {
     return m_fitness;
 }
+
+Weights Agent::get_weights () const {
+    return m_weights;
+}

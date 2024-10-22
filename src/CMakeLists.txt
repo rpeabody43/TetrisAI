@@ -19,6 +19,7 @@ add_executable(
     main_genetic.cpp
     ai/genetic/eval.cpp
     ai/genetic/Agent.cpp
+    ai/genetic/train.cpp
     ${COMMON_SOURCES}
 )
 target_link_libraries(GeneticAlgo PRIVATE lib)
