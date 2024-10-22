@@ -4,7 +4,7 @@ Making a computer play Tetris better than most people can.
 ## How to build
 (so I remember)
 
-**None of this is platform specific**
+**None of this is platform specific (except paths)**
 1. Clone repo
 2. Install git modules
 ```
